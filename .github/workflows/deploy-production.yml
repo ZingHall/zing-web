@@ -1,0 +1,101 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm production deployment'
+        required: true
+        default: ''
+
+env:
+  ENV: production
+  AWS_ACCOUNT_ID: 555108715199
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: zing-web
+  ECS_CLUSTER: zing-web
+  ECS_SERVICE: zing-web
+  ECS_TASK_DEFINITION: .aws/task-definition-production.json
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    environment: production
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "deploy" ]; then
+            echo "❌ Deployment cancelled: confirmation required"
+            echo "Please type 'deploy' in the confirmation field"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Shorten commit hash
+        id: shorten-commit
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-actions-cicd-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Check if image already exists and exit
+        run: |
+          if aws ecr describe-images --repository-name ${{ env.ECR_REPOSITORY }} --image-ids imageTag=${{ steps.shorten-commit.outputs.sha_short }} 2>/dev/null; then
+            echo "Image already exists, exiting workflow"
+            exit 0
+          fi
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.shorten-commit.outputs.sha_short }}
+        run: |
+          docker build \
+            --build-arg GH_TOKEN=${{ secrets.GH_ACCESS_TOKEN }} \
+            --build-arg BUILD=${{ steps.shorten-commit.outputs.sha_short }} \
+            --build-arg REPO_OWNER=${{ github.repository_owner }} \
+            --build-arg NEXT_PUBLIC_ENV=${{ env.ENV }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: app
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment to production successful!"
+            echo "Deployed by: ${{ github.actor }}"
+          else
+            echo "❌ Deployment to production failed!"
+          fi
