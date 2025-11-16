@@ -5,9 +5,9 @@
  * Creates a simple PNG, embeds a message, then extracts it to verify
  */
 
-const { PNG } = require('pngjs');
-const fs = require('fs');
-const path = require('path');
+import { PNG } from 'pngjs';
+import fs from 'fs';
+import path from 'path';
 
 // Simple inline implementation for testing (avoids TypeScript compilation)
 function stringToBinary(str) {
