@@ -148,7 +148,14 @@ export default function Home() {
                   Download Embedded Image
                 </a>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded p-2">
-                  <img src={embedResult} alt="Embedded" className="w-full" />
+                  <Image 
+                    src={embedResult} 
+                    alt="Embedded" 
+                    width={800}
+                    height={600}
+                    className="w-full h-auto" 
+                    unoptimized 
+                  />
                 </div>
               </div>
             )}
