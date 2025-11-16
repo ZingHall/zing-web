@@ -79,13 +79,18 @@ RUN groupadd --gid 1001 --system nodejs && \
     useradd --uid 1001 --system --gid nodejs nodejs
 
 # 創建必要的目錄並設置權限
-RUN mkdir -p .next/static && \
+RUN mkdir -p .next/static scripts && \
     chown -R nodejs:nodejs /app
 
 # 複製 standalone 輸出
 COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nodejs:nodejs /app/public ./public
+
+# 複製 health check 腳本並設置權限
+COPY --chown=nodejs:nodejs scripts/healthcheck.js ./scripts/healthcheck.js
+RUN chmod +x ./scripts/healthcheck.js && \
+    chown nodejs:nodejs ./scripts/healthcheck.js
 
 # 切換到非 root 用戶
 USER nodejs
