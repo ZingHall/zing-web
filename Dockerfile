@@ -88,9 +88,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 
 # 複製 health check 腳本並設置權限
-COPY --chown=nodejs:nodejs scripts/healthcheck.js ./scripts/healthcheck.js
-RUN chmod +x ./scripts/healthcheck.js && \
-    chown nodejs:nodejs ./scripts/healthcheck.js
+COPY --chown=nodejs:nodejs scripts/healthcheck.cjs ./scripts/healthcheck.cjs
+RUN chmod +x ./scripts/healthcheck.cjs && \
+    chown nodejs:nodejs ./scripts/healthcheck.cjs
 
 # 切換到非 root 用戶
 USER nodejs
