@@ -18,3 +18,13 @@ export function deriveStudioID(address: string) {
     bcs.Address.serialize(address).toBytes(),
   );
 }
+
+export function deriveStorageID(address: string) {
+  const studioId = deriveStudioID(address);
+  const key = new Uint8Array(Buffer.from("storage", "utf8"));
+  return deriveObjectID(
+    studioId,
+    "vector<u8>",
+    bcs.vector(bcs.u8()).serialize(key).toBytes(),
+  );
+}

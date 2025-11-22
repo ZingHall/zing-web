@@ -82,7 +82,7 @@ export default function PurchaseTierTab() {
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`relative border rounded-lg p-6 ${
+              className={`relative border rounded-lg flex flex-col justify-between p-6 ${
                 tier.popular
                   ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20"
                   : "border-zinc-300 dark:border-zinc-700"

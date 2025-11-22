@@ -18,8 +18,11 @@ const tabs = [
 export default function Home() {
   const [activeTab, setActiveTab] = useState("studio");
 
-  const ActiveComponent =
-    tabs.find((tab) => tab.id === activeTab)?.component || EmbedTab;
+  const renderActiveComponent = () => {
+    const ActiveComponent =
+      tabs.find((tab) => tab.id === activeTab)?.component || EmbedTab;
+    return <ActiveComponent setActiveTab={setActiveTab} />;
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
@@ -48,9 +51,7 @@ export default function Home() {
         </div>
 
         {/* Tab Content */}
-        <div className="mb-8">
-          <ActiveComponent />
-        </div>
+        <div className="mb-8">{renderActiveComponent()}</div>
 
         {/* How It Works Section */}
         <div className="p-6 bg-zinc-100 dark:bg-zinc-900 rounded-lg">

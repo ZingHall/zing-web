@@ -4,15 +4,24 @@ import { useState } from "react";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 import { useSetupStudio } from "@/app/hooks/mutations/useSetupStudio";
+import { useGetStorageSpace } from "@/app/hooks/queries/useGetStorageSpace";
 
-export default function SetupStudioTab() {
+interface SetupStudioTabProps {
+  setActiveTab: (tab: string) => void;
+}
+
+export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
   const currentAccount = useCurrentAccount();
   const [setupFileKeyLoading, setSetupFileKeyLoading] = useState(false);
 
   const suiClient = useSuiClient();
   const { data: studio } = useGetStudio(suiClient, currentAccount?.address);
-
   console.log({ studio });
+  const { data: storageSpace } = useGetStorageSpace(
+    suiClient,
+    currentAccount?.address,
+  );
+  console.log({ storageSpace });
 
   const { mutateAsync: setupStudio, isPending: isSettingupStudio } =
     useSetupStudio();
@@ -102,15 +111,28 @@ export default function SetupStudioTab() {
             <h3 className="font-medium text-black dark:text-zinc-50 mb-2">
               Studio Status
             </h3>
-            <div className="flex items-center space-x-2">
-              <div
-                className={`w-3 h-3 rounded-full ${isStudioActive(studio.period) ? "bg-green-500" : "bg-red-500"}`}
-              ></div>
-              <span
-                className={`text-sm font-medium ${isStudioActive(studio.period) ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-              >
-                {isStudioActive(studio.period) ? "Active" : "Inactive"}
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2 items-center">
+                <div
+                  className={`w-3 h-3 rounded-full ${isStudioActive(studio.period) ? "bg-green-500" : "bg-red-500"}`}
+                ></div>
+                <span
+                  className={`text-sm font-medium ${isStudioActive(studio.period) ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                >
+                  {isStudioActive(studio.period) ? "Active" : "Inactive"}
+                </span>
+              </div>
+              {!isStudioActive(studio.period) && (
+                <button
+                  onClick={handleSetupFileKey}
+                  disabled={setupFileKeyLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {setupFileKeyLoading
+                    ? "Setting up..."
+                    : "Go Purchase the Plan"}
+                </button>
+              )}
             </div>
             {studio.period &&
               studio.period.length >= 2 &&
@@ -224,22 +246,12 @@ export default function SetupStudioTab() {
               )}
             </div>
           </div>
-
-          {/* Owner Info */}
-          <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded">
-            <h3 className="font-medium text-black dark:text-zinc-50 mb-2">
-              Studio Owner
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 font-mono break-all">
-              {studio.owner}
-            </p>
-          </div>
         </div>
       ) : (
         // No studio - show setup form
         <div className="text-center py-8">
           <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            Setup yout Studio to join Zing ecosystem
+            Setup your Studio to join Zing ecosystem
           </p>
           <button
             type="submit"
