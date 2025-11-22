@@ -9,14 +9,14 @@ import PurchaseTierTab from "@/components/PurchaseTierTab";
 import "@mysten/dapp-kit/dist/index.css";
 
 const tabs = [
-  { id: "embed", label: "Embed Watermark", component: EmbedTab },
-  { id: "extract", label: "Extract Watermark", component: ExtractTab },
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
+  { id: "embed", label: "Embed Watermark", component: EmbedTab },
+  { id: "extract", label: "Extract Watermark", component: ExtractTab },
 ];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("embed");
+  const [activeTab, setActiveTab] = useState("studio");
 
   const ActiveComponent =
     tabs.find((tab) => tab.id === activeTab)?.component || EmbedTab;
