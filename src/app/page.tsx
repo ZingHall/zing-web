@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import EmbedTab from "@/components/EmbedTab";
+import PublishTab from "@/components/PublishTab";
 import ExtractTab from "@/components/ExtractTab";
 import SetupStudioTab from "@/components/SetupStudioTab";
 import PurchaseTierTab from "@/components/PurchaseTierTab";
@@ -11,7 +11,7 @@ import "@mysten/dapp-kit/dist/index.css";
 const tabs = [
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  { id: "embed", label: "Embed Watermark", component: EmbedTab },
+  { id: "embed", label: "Publish Image", component: PublishTab },
   { id: "extract", label: "Extract Watermark", component: ExtractTab },
 ];
 
@@ -20,7 +20,7 @@ export default function Home() {
 
   const renderActiveComponent = () => {
     const ActiveComponent =
-      tabs.find((tab) => tab.id === activeTab)?.component || EmbedTab;
+      tabs.find((tab) => tab.id === activeTab)?.component || SetupStudioTab;
     return <ActiveComponent setActiveTab={setActiveTab} />;
   };
 
@@ -60,23 +60,23 @@ export default function Home() {
           </h3>
           <ul className="space-y-2 text-zinc-700 dark:text-zinc-300">
             <li>
-              • <strong>LSB Steganography:</strong> Embeds watermarks in the
+              ‚Ä¢ <strong>LSB Steganography:</strong> Embeds watermarks in the
               least significant bits of image pixels
             </li>
             <li>
-              • <strong>Blockchain Integration:</strong> Uses Sui blockchain for
+              ‚Ä¢ <strong>Blockchain Integration:</strong> Uses Sui blockchain for
               secure watermark verification and ownership
             </li>
             <li>
-              • <strong>Studio System:</strong> Create your own watermarking
+              ‚Ä¢ <strong>Studio System:</strong> Create your own watermarking
               studio and monetize your services
             </li>
             <li>
-              • <strong>Tier Plans:</strong> Choose from flexible pricing plans
+              ‚Ä¢ <strong>Tier Plans:</strong> Choose from flexible pricing plans
               based on your watermarking needs
             </li>
             <li>
-              • <strong>Format Support:</strong> Works with PNG, JPG, and WebP
+              ‚Ä¢ <strong>Format Support:</strong> Works with PNG, JPG, and WebP
               formats (depending on your plan)
             </li>
           </ul>

@@ -6,7 +6,7 @@ import {
   ZING_STUDIO_PACKAGE_ADDRESS,
   ZING_STUDIO_V0_PACKAGE_ADDRESS,
 } from "@/lib/utils";
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { bcs } from "@mysten/sui/bcs";
 import { Transaction } from "@mysten/sui/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ export async function createFileKey(): Promise<Uint8Array> {
 }
 
 export function useSetupFileKey() {
+  const suiClient = useSuiClient();
   const { sealClient } = useAppContext();
   const queryClient = useQueryClient();
   const { mutateAsync: signAndExecuteTransaction } =
@@ -64,11 +65,11 @@ export function useSetupFileKey() {
       const transactionResponse = await signAndExecuteTransaction({
         transaction: tx,
       });
-      console.log({ transactionResponse });
 
       return transactionResponse;
     },
     onSuccess: async (params, variables) => {
+      await suiClient.waitForTransaction({ digest: params.digest });
       await queryClient.refetchQueries({
         queryKey: getStudioQueryKey(variables.suiAddress),
       });

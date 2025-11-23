@@ -1,11 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useState,
+  SetStateAction,
+  Dispatch,
+} from "react";
 import { getFullnodeUrl } from "@mysten/sui/client";
-import { walrus } from "@mysten/walrus";
+import { walrus, WalrusClient } from "@mysten/walrus";
 import { SealClient } from "@mysten/seal";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { useSuiClient } from "@mysten/dapp-kit";
+import { ClientWithExtensions } from "@mysten/sui/experimental";
 
 const serverObjectIds = [
   "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75",
@@ -13,8 +22,15 @@ const serverObjectIds = [
 ];
 
 interface AppContextType {
-  suiJsonRpcClient: SuiJsonRpcClient;
+  suiJsonRpcClient: ClientWithExtensions<
+    {
+      walrus: WalrusClient;
+    },
+    SuiJsonRpcClient
+  >;
   sealClient: SealClient;
+  fileKey: CryptoKey | null;
+  setFileKey: Dispatch<SetStateAction<CryptoKey | null>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -54,9 +70,13 @@ export function AppProvider({ children }: AppProviderProps) {
     [suiClient],
   );
 
+  const [fileKey, setFileKey] = useState<CryptoKey | null>(null);
+
   const value: AppContextType = {
     suiJsonRpcClient,
     sealClient,
+    fileKey,
+    setFileKey,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
