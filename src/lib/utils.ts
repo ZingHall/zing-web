@@ -35,6 +35,8 @@ export const ZING_STUDIO_PACKAGE_ADDRESS =
   "0x7db47cf60ae88bbea4aa4962e1d83fc140be51a140dc8c597b17380f55e2fdab";
 export const ZING_FRAMEWORK_PACKAGE_ADDRESS =
   "0xd851eb5b907b60aa5fd958dd74044d809c49ee60001cad621726f03ea138f943";
+export const WAL_TESTNET_PACKAGE_ADDRESS =
+  "0xa998b8719ca1c0a6dc4e24a859bbb39f5477417f71885fbf2967a6510f699144";
 
 export function deriveStudioID(address: string) {
   return deriveObjectID(

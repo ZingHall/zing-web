@@ -2,10 +2,11 @@
 
 import React, { createContext, useContext, ReactNode, useMemo } from "react";
 import { getFullnodeUrl } from "@mysten/sui/client";
-import { walrus } from "@mysten/walrus";
+import { walrus, WalrusClient } from "@mysten/walrus";
 import { SealClient } from "@mysten/seal";
 import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { useSuiClient } from "@mysten/dapp-kit";
+import { ClientWithExtensions } from "@mysten/sui/experimental";
 
 const serverObjectIds = [
   "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75",
@@ -13,7 +14,12 @@ const serverObjectIds = [
 ];
 
 interface AppContextType {
-  suiJsonRpcClient: SuiJsonRpcClient;
+  suiJsonRpcClient: ClientWithExtensions<
+    {
+      walrus: WalrusClient;
+    },
+    SuiJsonRpcClient
+  >;
   sealClient: SealClient;
 }
 
