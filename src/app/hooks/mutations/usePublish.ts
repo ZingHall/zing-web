@@ -61,6 +61,138 @@ export type WalrusUploadFlowStage =
   | "fetching_files"
   | "publish";
 
+export function usePublishArticle() {
+  const { sealClient, suiJsonRpcClient, fileKey } = useAppContext();
+  const currentAccount = useCurrentAccount();
+  const { mutateAsync: signAndExecuteTransaction } =
+    useSignAndExecuteTransaction();
+
+  console.log({ fileKey });
+
+  return useMutation({
+    mutationFn: async ({
+      walrusFiles,
+      metadata,
+      onProgress,
+    }: {
+      walrusFiles: WalrusFile[];
+      metadata: {
+        identifier: string;
+        tags: {
+          "content-type": string;
+        };
+        size: number;
+        isPublic: boolean;
+      }[];
+      onProgress?: (stage: WalrusUploadFlowStage) => void;
+    }) => {
+      if (!currentAccount) return;
+
+      const report = (stage: WalrusUploadFlowStage) => {
+        if (onProgress) onProgress(stage);
+      };
+
+      const owner = currentAccount?.address;
+
+      if (!owner) throw new Error("no signer");
+      // Step 1: Create and encode the flow (can be done immediately when file is selected)
+      const flow = zingWriteFlow(
+        suiJsonRpcClient,
+        suiJsonRpcClient.walrus,
+        sealClient,
+        deriveStudioID(owner),
+        owner,
+        metadata,
+        {
+          files: walrusFiles,
+        },
+        true,
+      );
+
+      report("encode");
+      await flow.encode();
+
+      // Step 2: Register the blob (triggered by user clicking a register button after the encode step)
+      async function handleRegister() {
+        if (!owner)
+          throw new Error("suiaddress not found in zkloginsignerstate");
+
+        report("register_blob");
+
+        try {
+          const registerTx = flow.register({
+            epochs: 1,
+            owner,
+            deletable: true,
+          });
+
+          console.log("Register transaction created:", { registerTx });
+
+          const registerTxEffects = await signAndExecuteTransaction({
+            transaction: registerTx,
+          });
+
+          console.log("Register transaction executed:", { registerTxEffects });
+
+          if (!registerTxEffects?.digest)
+            throw new Error("fail to execute register Blob transaction");
+
+          const finalizedTransaction =
+            await suiJsonRpcClient.waitForTransaction({
+              digest: registerTxEffects.digest,
+              options: {
+                showEffects: true,
+                showEvents: true,
+              },
+            });
+
+          console.log("Register transaction finalized:", {
+            finalizedTransaction,
+          });
+
+          // Step 3: Upload the data to storage nodes
+          // This can be done immediately after the register step, or as a separate step the user initiates
+          report("upload");
+          await flow.upload({ digest: finalizedTransaction.digest });
+
+          return finalizedTransaction;
+        } catch (error) {
+          console.error("Error in handleRegister:", error);
+          throw error;
+        }
+      }
+
+      await handleRegister();
+
+      // Step 4: Certify the blob (triggered by user clicking a certify button after the blob is uploaded)
+      async function handleCertify() {
+        report("certify_blob");
+        const certifyTx = flow.certify();
+
+        const certifyTxEffects = await signAndExecuteTransaction({
+          transaction: certifyTx,
+        });
+
+        if (!certifyTxEffects?.digest)
+          throw new Error("fail to execute certify Blob transaction");
+
+        await suiJsonRpcClient.waitForTransaction({
+          digest: certifyTxEffects.digest,
+        });
+
+        report("fetching_files");
+        // Step 5: Get the new files
+        const blobs = await flow.listFiles();
+
+        return blobs;
+      }
+
+      return await handleCertify();
+    },
+    onSuccess: async () => {},
+  });
+}
+
 async function getObjectId(
   suiClient: SuiJsonRpcClient,
   walrusClient: WalrusClient,
@@ -219,7 +351,7 @@ export function publishArticle(
             ZING_STORAGE_TREASURY_SHARED_OBJECT_REF,
           ),
           storageSpace: tx.object(deriveStorageID(owner)),
-          subscriptionLevel: null,
+          subscriptionLevel: tx.pure.option("u8", null),
           blobId: blobIdToInt(blobId),
           rootHash: BigInt(bcs.u256().parse(rootHash)),
           unencodedBlobSize: fileSize, // we do the encodedSize calculation on-chain
@@ -379,25 +511,8 @@ export const zingWriteFlow = (
     const { quilt, index } = await walrusClient.encodeQuilt({
       blobs: await Promise.all(
         files.map(async (file, i) => {
-          const contents = await file.bytes();
-          let bytes;
-          if (studioObjectId) {
-            // seal encode
-            const { encryptedObject: encryptedBytes } =
-              await sealClient.encrypt({
-                threshold: 1,
-                packageId: ZING_STUDIO_PACKAGE_ADDRESS,
-                id: deriveStudioID(owner),
-                data: contents,
-              });
-
-            bytes = encryptedBytes;
-          } else {
-            bytes = contents;
-          }
-
           return {
-            contents: bytes,
+            contents: await file.bytes(),
             identifier: (await file.getIdentifier()) ?? `file-${i}`,
             tags: (await file.getTags()) ?? {},
           };
@@ -608,113 +723,3 @@ export const zingWriteFlow = (
     listFiles: async () => listFiles(getResults("certify", "listFiles")),
   };
 };
-
-export function usePublishArticle() {
-  const { sealClient, suiJsonRpcClient } = useAppContext();
-  const currentAccount = useCurrentAccount();
-  const { mutateAsync: signAndExecuteTransaction } =
-    useSignAndExecuteTransaction();
-
-  return useMutation({
-    mutationFn: async ({
-      walrusFiles,
-      metadata,
-      isPublic,
-      onProgress,
-    }: {
-      walrusFiles: WalrusFile[];
-      metadata: {
-        identifier: string;
-        tags: {
-          "content-type": string;
-        };
-        size: number;
-        isPublic: boolean;
-      }[];
-      isPublic: boolean;
-      onProgress?: (stage: WalrusUploadFlowStage) => void;
-    }) => {
-      if (!currentAccount) return;
-
-      const report = (stage: WalrusUploadFlowStage) => {
-        if (onProgress) onProgress(stage);
-      };
-
-      const owner = currentAccount?.address;
-
-      if (!owner) throw new Error("no signer");
-      // Step 1: Create and encode the flow (can be done immediately when file is selected)
-      const flow = zingWriteFlow(
-        suiJsonRpcClient,
-        suiJsonRpcClient.walrus,
-        sealClient,
-        isPublic ? null : deriveStudioID(owner),
-        owner,
-        metadata,
-        {
-          files: walrusFiles,
-        },
-        true,
-      );
-
-      report("encode");
-      await flow.encode();
-
-      // Step 2: Register the blob (triggered by user clicking a register button after the encode step)
-      async function handleRegister() {
-        if (!owner)
-          throw new Error("suiaddress not found in zkloginsignerstate");
-
-        report("register_blob");
-        const registerTx = flow.register({
-          epochs: 1,
-          owner,
-          deletable: true,
-        });
-
-        const registerTxEffects = await signAndExecuteTransaction({
-          transaction: registerTx,
-        });
-
-        if (!registerTxEffects?.digest)
-          throw new Error("fail to execute register Blob transaction");
-
-        const finalizedTransaction = await suiJsonRpcClient.waitForTransaction({
-          digest: registerTxEffects.digest,
-        });
-        // Step 3: Upload the data to storage nodes
-        // This can be done immediately after the register step, or as a separate step the user initiates
-        report("upload");
-        await flow.upload({ digest: finalizedTransaction.digest });
-      }
-
-      await handleRegister();
-
-      // Step 4: Certify the blob (triggered by user clicking a certify button after the blob is uploaded)
-      async function handleCertify() {
-        report("certify_blob");
-        const certifyTx = flow.certify();
-
-        const certifyTxEffects = await signAndExecuteTransaction({
-          transaction: certifyTx,
-        });
-
-        if (!certifyTxEffects?.digest)
-          throw new Error("fail to execute certify Blob transaction");
-
-        await suiJsonRpcClient.waitForTransaction({
-          digest: certifyTxEffects.digest,
-        });
-
-        report("fetching_files");
-        // Step 5: Get the new files
-        const blobs = await flow.listFiles();
-
-        return blobs;
-      }
-
-      return await handleCertify();
-    },
-    onSuccess: async () => {},
-  });
-}

@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useState,
+  SetStateAction,
+  Dispatch,
+} from "react";
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { walrus, WalrusClient } from "@mysten/walrus";
 import { SealClient } from "@mysten/seal";
@@ -21,6 +29,8 @@ interface AppContextType {
     SuiJsonRpcClient
   >;
   sealClient: SealClient;
+  fileKey: CryptoKey | null;
+  setFileKey: Dispatch<SetStateAction<CryptoKey | null>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -60,9 +70,13 @@ export function AppProvider({ children }: AppProviderProps) {
     [suiClient],
   );
 
+  const [fileKey, setFileKey] = useState<CryptoKey | null>(null);
+
   const value: AppContextType = {
     suiJsonRpcClient,
     sealClient,
+    fileKey,
+    setFileKey,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -38,6 +38,10 @@ export const ZING_FRAMEWORK_PACKAGE_ADDRESS =
 export const WAL_TESTNET_PACKAGE_ADDRESS =
   "0xa998b8719ca1c0a6dc4e24a859bbb39f5477417f71885fbf2967a6510f699144";
 
+export const FIXED_FILE_IV = new Uint8Array([
+  4, 122, 105, 110, 103, 0, 0, 0, 0, 0, 0, 0,
+]);
+
 export function deriveStudioID(address: string) {
   return deriveObjectID(
     ZING_STUDIO_CONFIG_SHARED_OBJECT_REF.objectId,
@@ -54,4 +58,54 @@ export function deriveStorageID(address: string) {
     "vector<u8>",
     bcs.vector(bcs.u8()).serialize(key).toBytes(),
   );
+}
+
+/**
+ * Encrypt data using AES-256-GCM.
+ * @returns {Uint8Array} Concatenated [IV | ciphertext]
+ */
+export async function encryptData(
+  key: CryptoKey,
+  data: ArrayBuffer | Uint8Array,
+  iv: Uint8Array, // Accept IV as parameter
+): Promise<Uint8Array> {
+  const encoded = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const cleanEncoded = new Uint8Array(encoded);
+  const cleanivBytes = new Uint8Array(iv);
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: cleanivBytes },
+      key,
+      cleanEncoded,
+    ),
+  );
+
+  // Combine IV + ciphertext for easy storage
+  const combined = new Uint8Array(iv.length + ciphertext.length);
+  combined.set(iv);
+  combined.set(ciphertext, iv.length);
+  return combined;
+}
+
+/**
+ * Decrypt data using AES-256-GCM.
+ * Input must be the combined [IV | ciphertext] format.
+ */
+export async function decryptData(
+  key: CryptoKey,
+  encrypted: ArrayBuffer | Uint8Array,
+): Promise<Uint8Array> {
+  const bytes =
+    encrypted instanceof Uint8Array ? encrypted : new Uint8Array(encrypted);
+  const iv = bytes.slice(0, 12);
+  const ciphertext = bytes.slice(12);
+
+  console.log({ iv, ciphertext });
+
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    ciphertext,
+  );
+  return new Uint8Array(plaintext);
 }
