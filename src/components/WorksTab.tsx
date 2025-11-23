@@ -2,18 +2,71 @@
 
 import { useGetStudioWorks, Work } from "@/app/hooks/queries/useGetStudioWorks";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
+import {
+  arrayBufferToImageUrl,
+  getDecodedArticleQueryKey,
+  useGetDecodedArticle,
+} from "@/app/hooks/queries/useDecryptArticle";
+import { useAppContext } from "@/app/context/appContext";
+import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
+import { useSessionKeyUtils } from "@/app/hooks/queries/useSessionKey";
+import { importFileKey } from "@/app/hooks/queries/useGetFileKey";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function WorksTab() {
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
   const suiClient = useSuiClient();
   const currentAccount = useCurrentAccount();
+  const { sealClient, fileKey, setFileKey } = useAppContext();
   const { data: works } = useGetStudioWorks(suiClient, currentAccount?.address);
 
-  // Filter works based on search query
-  // Filter works based on search query
+  const { data: decodedArticle } = useGetDecodedArticle(
+    suiClient,
+    currentAccount?.address,
+    selectedWork || undefined,
+  );
+
+  const sealSessoinKeyUtils = useSessionKeyUtils();
+  const { data: studio } = useGetStudio(suiClient, currentAccount?.address);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const handleDecryptFileKey = async () => {
+    if (!studio || !studio.encrypted_file_key) return;
+    try {
+      setIsDecrypting(true);
+      const fileKey = studio.encrypted_file_key;
+      const sessionKey = await sealSessoinKeyUtils.createSessionKey({
+        suiClient,
+      });
+
+      if (!sessionKey) {
+        console.error("fail to fetch sessionKey");
+        return;
+      }
+      const txBytes =
+        await sealSessoinKeyUtils.createSealApproveTransactionBytes({
+          suiClient,
+          studioId: studio.id.id,
+        });
+
+      const decryptedKey = await sealClient.decrypt({
+        data: new Uint8Array(fileKey),
+        sessionKey,
+        txBytes,
+      });
+
+      const cryptoKey = await importFileKey(decryptedKey);
+      setFileKey(cryptoKey);
+    } catch (error) {
+      console.error({ error });
+    } finally {
+      setIsDecrypting(false);
+    }
+  };
+
   const filteredWorks = useMemo(() => {
     if (!works || !Array.isArray(works)) return [];
 
@@ -65,12 +118,90 @@ export default function WorksTab() {
     return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
   };
 
+  const { previewImageUrl, isOwner } = useMemo(() => {
+    const article = decodedArticle?.works?.[0];
+    if (!decodedArticle || !article)
+      return { previewImageUrl: null, isOwner: !!decodedArticle?.isOwner };
+
+    return {
+      previewImageUrl: arrayBufferToImageUrl(article.bytes as any),
+      isOwner: decodedArticle.isOwner,
+    };
+  }, [decodedArticle]);
+
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<"success" | "error" | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!selectedWork) {
+      setStatusMessage(null);
+      setStatusType(null);
+      return;
+    }
+
+    if (isOwner) {
+      if (!fileKey) {
+        setStatusType("error");
+        setStatusMessage("You must set up a FileKey before decrypting.");
+      } else {
+        setStatusType("success");
+        setStatusMessage(
+          "You're verified ✅ you are the publisher. You can access the original image.",
+        );
+      }
+    } else {
+      setStatusMessage(null);
+      setStatusType(null);
+    }
+  }, [selectedWork, previewImageUrl, fileKey, isOwner]);
+
+  useEffect(() => {
+    if (fileKey && selectedWork && currentAccount) {
+      queryClient.invalidateQueries({
+        queryKey: getDecodedArticleQueryKey(
+          currentAccount?.address || undefined,
+          selectedWork.id.id,
+        ),
+      });
+    }
+  }, [fileKey, currentAccount, queryClient, selectedWork]);
+
+  console.log({ statusType, statusMessage, isOwner });
+
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg h-full">
       <div className="p-6 border-b border-zinc-200 dark:border-zinc-700">
         <h2 className="text-2xl font-semibold mb-4 text-black dark:text-zinc-50">
           My Works
         </h2>
+
+        <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded mb-5">
+          <h3 className="font-medium text-black dark:text-zinc-50 mb-2">
+            File Key Status
+          </h3>
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-2 items-center">
+              <div
+                className={`w-3 h-3 rounded-full ${fileKey ? "bg-green-500" : "bg-red-500"}`}
+              ></div>
+              <span
+                className={`text-sm font-medium ${fileKey ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              >
+                {fileKey ? "Decrypted" : "Encrypted"}
+              </span>
+            </div>
+            {!fileKey && (
+              <button
+                onClick={handleDecryptFileKey}
+                disabled={isDecrypting}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDecrypting ? "Decrypting..." : "Decrypt FileKey"}
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Search Bar */}
         <div className="relative">
@@ -182,24 +313,52 @@ export default function WorksTab() {
           {selectedWork ? (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-12 h-12 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                <div
+                  className="mx-auto mb-4 rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-700"
+                  style={{ width: "260px", height: "260px" }}
+                >
+                  {previewImageUrl ? (
+                    <img
+                      src={previewImageUrl}
+                      alt="decoded"
+                      className="w-full h-full object-contain"
                     />
-                  </svg>
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <svg
+                        className="w-16 h-16 text-zinc-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
+
                 <h3 className="text-xl font-semibold text-black dark:text-zinc-50 mb-2">
                   Work Details
                 </h3>
+                {statusMessage && (
+                  <div
+                    className={`
+      mt-4 px-4 py-3 rounded-xl text-sm text-left
+      ${
+        statusType === "success"
+          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+          : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+      }
+    `}
+                  >
+                    {statusMessage}
+                  </div>
+                )}
               </div>
 
               {/* Metadata Cards */}
