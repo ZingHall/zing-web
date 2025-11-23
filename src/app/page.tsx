@@ -8,13 +8,15 @@ import SetupStudioTab from "@/components/SetupStudioTab";
 import PurchaseTierTab from "@/components/PurchaseTierTab";
 import "@mysten/dapp-kit/dist/index.css";
 import HowItWorksTab from "@/components/HowItWorksTab";
+import EmbedTab from "@/components/EmbedTab";
 
 const tabs = [
   { id: "how-it-works", label: "How it works", component: HowItWorksTab },
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  { id: "embed", label: "Upload Image", component: PublishTab },
+  { id: "publish", label: "Upload Image", component: PublishTab },
   { id: "works", label: "Works", component: WorksTab },
+  { id: "embed", label: "Embed", component: EmbedTab },
 ];
 
 export default function Home() {
