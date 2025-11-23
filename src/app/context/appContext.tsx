@@ -32,7 +32,12 @@ export function AppProvider({ children }: AppProviderProps) {
         url: getFullnodeUrl("testnet"),
         // Setting network on your client is required for walrus to work correctly
         network: "testnet",
-      }).$extend(walrus()),
+      }).$extend(
+        walrus({
+          wasmUrl:
+            "https://unpkg.com/@mysten/walrus-wasm@latest/web/walrus_wasm_bg.wasm",
+        }),
+      ),
     [],
   );
 

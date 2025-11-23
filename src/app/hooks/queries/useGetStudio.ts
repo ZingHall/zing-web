@@ -3,13 +3,6 @@ import type { SuiClient } from "@mysten/sui/client";
 import { deriveStudioID } from "@/lib/utils";
 import { Studio } from "@/_generated/zing_studio/studio";
 
-interface UseGetStudioResult {
-  data: typeof Studio.$inferType | null;
-  loading: boolean;
-  error: Error | null;
-  refetch: () => void;
-}
-
 async function fetchStudio(
   suiClient: SuiClient,
   owner: string,
@@ -35,11 +28,8 @@ async function fetchStudio(
 }
 
 export const getStudioQueryKey = (owner?: string | null) => ["studio", owner];
-export function useGetStudio(
-  suiClient?: SuiClient,
-  owner?: string,
-): UseGetStudioResult {
-  const { data, isLoading, error, refetch } = useQuery({
+export function useGetStudio(suiClient?: SuiClient, owner?: string) {
+  return useQuery({
     queryKey: getStudioQueryKey(owner),
     queryFn: async () => {
       if (!suiClient || !owner) {
@@ -61,11 +51,4 @@ export function useGetStudio(
     refetchOnWindowFocus: false, // Prevent refetch on window focus
     refetchOnMount: false, // Only fetch if data is stale
   });
-
-  return {
-    data: data ?? null,
-    loading: isLoading,
-    error: error instanceof Error ? error : null,
-    refetch,
-  };
 }

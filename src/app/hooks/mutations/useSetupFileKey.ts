@@ -12,7 +12,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getStudioQueryKey } from "../queries/useGetStudio";
 
-async function createFileKey(): Promise<Uint8Array> {
+export async function createFileKey(): Promise<Uint8Array> {
   // Generate AES-GCM key
   const key = await crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },

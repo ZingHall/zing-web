@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
+import { usePurchaseStorageTier } from "@/app/hooks/mutations/usePurchaseTier";
+import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 
 const tiers = [
   {
     name: "Basic",
-    price: "10 SUI",
+    price: 0.1,
     features: [
-      "100 watermarks per month",
+      "10 MB for 10 days",
       "Basic templates",
       "Standard support",
       "PNG format only",
@@ -16,50 +17,52 @@ const tiers = [
   },
   {
     name: "Pro",
-    price: "25 SUI",
+    price: 0.5,
     features: [
-      "1,000 watermarks per month",
+      "50 MB per month",
       "Premium templates",
       "Priority support",
       "Multiple formats (PNG, JPG, WebP)",
       "Batch processing",
     ],
-    popular: true,
   },
   {
     name: "Enterprise",
-    price: "100 SUI",
+    price: 1,
     features: [
-      "Unlimited watermarks",
+      "100 MB per month",
       "Custom templates",
       "24/7 dedicated support",
       "All formats supported",
       "API access",
       "White-label solution",
     ],
+    popular: true,
   },
 ];
 
 export default function PurchaseTierTab() {
   const currentAccount = useCurrentAccount();
-  const [loading, setLoading] = useState<string | null>(null);
+  const suiClient = useSuiClient();
 
-  const handlePurchase = async (tierName: string, price: string) => {
-    if (!currentAccount) {
-      alert("Please connect your wallet first");
+  const { data: studio, isLoading: isStudioLoading } = useGetStudio(
+    suiClient,
+    currentAccount?.address,
+  );
+
+  const { mutateAsync: purchaseStorageTier, isPending: isPurchasing } =
+    usePurchaseStorageTier();
+  const handlePurchase = async (newTierIdx: number) => {
+    if (!currentAccount || isStudioLoading) {
       return;
     }
 
-    setLoading(tierName);
-    try {
-      // TODO: Implement tier purchase logic with Sui blockchain
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate transaction
-      alert(`Successfully purchased ${tierName} tier!`);
-    } catch (error) {
-      alert("Failed to purchase tier");
-    } finally {
-      setLoading(null);
-    }
+    await purchaseStorageTier({
+      suiAddress: currentAccount.address,
+      isSetup: !!studio,
+      newTierIdx,
+      balance: Math.floor(tiers[newTierIdx].price * 10 ** 9),
+    });
   };
 
   return (
@@ -79,7 +82,7 @@ export default function PurchaseTierTab() {
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
-          {tiers.map((tier) => (
+          {tiers.map((tier, tierIdx) => (
             <div
               key={tier.name}
               className={`relative border rounded-lg flex flex-col justify-between p-6 ${
@@ -101,7 +104,7 @@ export default function PurchaseTierTab() {
                   {tier.name}
                 </h3>
                 <div className="text-3xl font-bold text-black dark:text-zinc-50">
-                  {tier.price}
+                  {tier.price} SUI
                 </div>
                 <div className="text-sm text-zinc-600 dark:text-zinc-400">
                   per month
@@ -120,17 +123,15 @@ export default function PurchaseTierTab() {
               </ul>
 
               <button
-                onClick={() => handlePurchase(tier.name, tier.price)}
-                disabled={loading === tier.name}
+                onClick={() => handlePurchase(tierIdx)}
+                disabled={isPurchasing}
                 className={`w-full py-2 px-4 rounded font-medium transition-colors ${
                   tier.popular
                     ? "bg-blue-500 hover:bg-blue-600 text-white"
                     : "bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {loading === tier.name
-                  ? "Processing..."
-                  : `Purchase ${tier.name}`}
+                {isPurchasing ? "Processing..." : `Purchase ${tier.name}`}
               </button>
             </div>
           ))}
