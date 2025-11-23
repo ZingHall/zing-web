@@ -9,6 +9,7 @@ import PurchaseTierTab from "@/components/PurchaseTierTab";
 import "@mysten/dapp-kit/dist/index.css";
 import HowItWorksTab from "@/components/HowItWorksTab";
 import EmbedTab from "@/components/EmbedTab";
+import StorageSpaceTab from "@/components/storageSpaceTab";
 
 const tabs = [
   { id: "how-it-works", label: "How it works", component: HowItWorksTab },
@@ -16,6 +17,11 @@ const tabs = [
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
   { id: "publish", label: "Upload Image", component: PublishTab },
   { id: "works", label: "Works", component: WorksTab },
+  {
+    id: "storage-treasury",
+    label: "Storage Treasury",
+    component: StorageSpaceTab,
+  },
   { id: "embed", label: "Embed", component: EmbedTab },
 ];
 

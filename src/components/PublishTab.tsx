@@ -14,6 +14,7 @@ import {
 } from "@/app/hooks/mutations/usePublish";
 import { WalrusFile } from "@mysten/walrus";
 import { encryptData, FIXED_FILE_IV } from "@/lib/utils";
+import { useGetStorageTreasury } from "@/app/hooks/queries/useGetStorageTreasury";
 
 type PublishState = {
   stage: WalrusUploadFlowStage;
@@ -35,6 +36,8 @@ export default function PublishTab() {
   const { sealClient, fileKey, setFileKey, suiJsonRpcClient } = useAppContext();
   const { data: studio } = useGetStudio(suiClient, currentAccount?.address);
   const sealSessoinKeyUtils = useSessionKeyUtils();
+  const { data: storageTreasury } = useGetStorageTreasury(suiClient);
+  console.log({ storageTreasury });
 
   const { encodeStep, registerStep, uploadStep, certifyStep } =
     usePublishArticle();
@@ -271,7 +274,7 @@ export default function PublishTab() {
         return (
           <div className="mt-5 space-y-3">
             <div className="w-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 py-2 px-4 rounded font-medium text-center">
-             ✓  Published Successfully!
+              ✓ Published Successfully!
             </div>
             <button
               onClick={() => {
@@ -293,7 +296,11 @@ export default function PublishTab() {
   return (
     <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold mb-4 text-black dark:text-zinc-50">
-        Publish your Image
+        Publish Your Image
+        <span className="ml-5 text-sm text-red-500">
+          *Please ensure the Storage Treasury has enough space. We&apos;re on
+          testnet, so storage capacity is not guaranteed.
+        </span>
       </h2>
       {studio ? (
         <>

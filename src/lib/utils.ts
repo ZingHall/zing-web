@@ -39,6 +39,10 @@ export const WAL_TESTNET_PACKAGE_ADDRESS =
   "0xa998b8719ca1c0a6dc4e24a859bbb39f5477417f71885fbf2967a6510f699144";
 export const ZING_STUDIO_ARTICLE_TYPES =
   "0xf8aa21deb4dac48354ff58043f8a6b3606a81849e5987a8fffa1c77475fa3d82::article::Article";
+export const WAL_TESTNET_TYPE =
+  "0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL";
+export const WAL_PACKAGE_ADDRESS =
+  "0xa998b8719ca1c0a6dc4e24a859bbb39f5477417f71885fbf2967a6510f699144";
 
 export const FIXED_FILE_IV = new Uint8Array([
   4, 122, 105, 110, 103, 0, 0, 0, 0, 0, 0, 0,
