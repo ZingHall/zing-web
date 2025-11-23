@@ -37,6 +37,8 @@ export const ZING_FRAMEWORK_PACKAGE_ADDRESS =
   "0xd851eb5b907b60aa5fd958dd74044d809c49ee60001cad621726f03ea138f943";
 export const WAL_TESTNET_PACKAGE_ADDRESS =
   "0xa998b8719ca1c0a6dc4e24a859bbb39f5477417f71885fbf2967a6510f699144";
+export const ZING_STUDIO_ARTICLE_TYPES =
+  "0xf8aa21deb4dac48354ff58043f8a6b3606a81849e5987a8fffa1c77475fa3d82::article::Article";
 
 export const FIXED_FILE_IV = new Uint8Array([
   4, 122, 105, 110, 103, 0, 0, 0, 0, 0, 0, 0,
@@ -53,6 +55,16 @@ export function deriveStudioID(address: string) {
 export function deriveStorageID(address: string) {
   const studioId = deriveStudioID(address);
   const key = new Uint8Array(Buffer.from("storage", "utf8"));
+  return deriveObjectID(
+    studioId,
+    "vector<u8>",
+    bcs.vector(bcs.u8()).serialize(key).toBytes(),
+  );
+}
+
+export function deriveWorksID(address: string) {
+  const studioId = deriveStudioID(address);
+  const key = new Uint8Array(Buffer.from("works", "utf8"));
   return deriveObjectID(
     studioId,
     "vector<u8>",

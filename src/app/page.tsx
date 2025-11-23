@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import PublishTab from "@/components/PublishTab";
-import ExtractTab from "@/components/ExtractTab";
+import WorksTab from "@/components/WorksTab";
 import SetupStudioTab from "@/components/SetupStudioTab";
 import PurchaseTierTab from "@/components/PurchaseTierTab";
 import "@mysten/dapp-kit/dist/index.css";
@@ -11,8 +11,8 @@ import "@mysten/dapp-kit/dist/index.css";
 const tabs = [
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  { id: "embed", label: "Publish Image", component: PublishTab },
-  { id: "extract", label: "Extract Watermark", component: ExtractTab },
+  { id: "embed", label: "Upload Image", component: PublishTab },
+  { id: "works", label: "Works", component: WorksTab },
 ];
 
 export default function Home() {
