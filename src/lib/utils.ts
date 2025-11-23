@@ -8,8 +8,10 @@ export const ZING_STUDIO_CONFIG_SHARED_OBJECT_REF = {
   mutable: true,
 };
 
-export const ZING_STUDIO_PACKAGE_ADDRESS =
+export const ZING_STUDIO_V0_PACKAGE_ADDRESS =
   "0xf8aa21deb4dac48354ff58043f8a6b3606a81849e5987a8fffa1c77475fa3d82";
+export const ZING_STUDIO_PACKAGE_ADDRESS =
+  "0x7db47cf60ae88bbea4aa4962e1d83fc140be51a140dc8c597b17380f55e2fdab";
 
 export function deriveStudioID(address: string) {
   return deriveObjectID(

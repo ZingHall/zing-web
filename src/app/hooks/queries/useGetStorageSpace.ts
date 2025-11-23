@@ -34,12 +34,16 @@ const fetchStorageSpace = async (suiClient: SuiClient, owner: string) => {
   return storage_space;
 };
 
+export const getStorageSpaceKey = (owner?: string | null) => [
+  "storageSpace",
+  owner,
+];
 export function useGetStorageSpace(
   suiClient?: SuiClient,
   owner?: string,
 ): UseGetStorageSpaceResult {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["storageSpace", owner],
+    queryKey: getStorageSpaceKey(owner),
     queryFn: () => fetchStorageSpace(suiClient!, owner!),
     enabled: Boolean(suiClient && owner),
     retry: false,

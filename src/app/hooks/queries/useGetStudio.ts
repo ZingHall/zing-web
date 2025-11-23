@@ -15,13 +15,11 @@ async function fetchStudio(
   owner: string,
 ): Promise<typeof Studio.$inferType | null> {
   const studioId = deriveStudioID(owner);
-  console.log({ studioId, suiClient, owner });
 
   const studioObjectResponse = await suiClient.getObject({
     id: studioId,
     options: { showBcs: true },
   });
-  console.log({ studioObjectResponse });
 
   if (studioObjectResponse.error?.code === "notExists") {
     return null;

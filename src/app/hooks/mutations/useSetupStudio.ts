@@ -6,14 +6,17 @@ import {
 } from "@/lib/utils";
 import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getStudioQueryKey } from "../queries/useGetStudio";
+import { getStorageSpaceKey } from "../queries/useGetStorageSpace";
 
 export function useSetupStudio() {
+  const queryClient = useQueryClient();
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ suiAddress }: { suiAddress: string }) => {
       const tx = new Transaction();
 
       const [studio, storageSpace] = tx.add(
@@ -42,6 +45,16 @@ export function useSetupStudio() {
       console.log({ transactionResponse });
 
       return transactionResponse;
+    },
+    onSuccess: async (res, variables) => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: getStudioQueryKey(variables.suiAddress),
+        }),
+        queryClient.refetchQueries({
+          queryKey: getStorageSpaceKey(variables.suiAddress),
+        }),
+      ]);
     },
   });
 }

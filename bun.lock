@@ -6,7 +6,9 @@
       "name": "zing-web",
       "dependencies": {
         "@mysten/dapp-kit": "^0.19.9",
+        "@mysten/seal": "^0.9.4",
         "@mysten/sui": "^1.45.0",
+        "@mysten/walrus": "^0.8.4",
         "@tanstack/react-query": "^5.90.10",
         "next": "16.0.3",
         "pngjs": "^7.0.0",
@@ -179,6 +181,8 @@
 
     "@mysten/dapp-kit": ["@mysten/dapp-kit@0.19.9", "", { "dependencies": { "@mysten/slush-wallet": "0.2.10", "@mysten/sui": "1.45.0", "@mysten/utils": "0.2.0", "@mysten/wallet-standard": "0.19.7", "@radix-ui/react-dialog": "^1.1.15", "@radix-ui/react-dropdown-menu": "^2.1.16", "@radix-ui/react-slot": "^1.2.3", "@vanilla-extract/css": "^1.17.4", "@vanilla-extract/dynamic": "^2.1.5", "@vanilla-extract/recipes": "^0.5.7", "clsx": "^2.1.1", "zustand": "^4.5.4" }, "peerDependencies": { "@tanstack/react-query": "^5.0.0", "react": "*" } }, "sha512-tQmAp9vTpNkN+t8kB5RNuNy7hPDQMDBaWA+IlxeZdTk9ovYzfj0rDWoTpbWzom8zSGJRayKbHKIbq04Jtw2pZg=="],
 
+    "@mysten/seal": ["@mysten/seal@0.9.4", "", { "dependencies": { "@mysten/bcs": "1.9.2", "@mysten/sui": "1.45.0", "@noble/curves": "=1.9.4", "@noble/hashes": "^1.8.0" } }, "sha512-bVq1zm7MkBIf/PcXoVAbKxJ78HBrtT5sg+lss/kYHW56llmvw/nxm2vBR9NLouqW/5tvNvyfXqffum/0eivUug=="],
+
     "@mysten/slush-wallet": ["@mysten/slush-wallet@0.2.10", "", { "dependencies": { "@mysten/sui": "1.45.0", "@mysten/utils": "0.2.0", "@mysten/wallet-standard": "0.19.7", "@mysten/window-wallet-core": "0.1.0", "mitt": "^3.0.1", "valibot": "^0.36.0" } }, "sha512-+Km3FSGMJ1RoRMijpiq9YFL0rocKPAsBolUdd8pjI7PR9wYgA/wTRV5gJmzVLgJTGfkEkJOqdOccg51XGw1NBw=="],
 
     "@mysten/sui": ["@mysten/sui@1.45.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@mysten/bcs": "1.9.2", "@mysten/utils": "0.2.0", "@noble/curves": "=1.9.4", "@noble/hashes": "^1.8.0", "@protobuf-ts/grpcweb-transport": "^2.11.1", "@protobuf-ts/runtime": "^2.11.1", "@protobuf-ts/runtime-rpc": "^2.11.1", "@scure/base": "^1.2.6", "@scure/bip32": "^1.7.0", "@scure/bip39": "^1.6.0", "gql.tada": "^1.8.13", "graphql": "^16.11.0", "poseidon-lite": "0.2.1", "valibot": "^0.36.0" } }, "sha512-WYpZmrGWE/FeQaRhYrAYpHcHallj4BFIfSmjq6BkODzEhP9HfMplQAtd8AmtctwO7cpHJ+BjPUOguEAcf1gU4g=="],
@@ -186,6 +190,10 @@
     "@mysten/utils": ["@mysten/utils@0.2.0", "", { "dependencies": { "@scure/base": "^1.2.6" } }, "sha512-CM6kJcJHX365cK6aXfFRLBiuyXc5WSBHQ43t94jqlCAIRw8umgNcTb5EnEA9n31wPAQgLDGgbG/rCUISCTJ66w=="],
 
     "@mysten/wallet-standard": ["@mysten/wallet-standard@0.19.7", "", { "dependencies": { "@mysten/sui": "1.45.0", "@wallet-standard/core": "1.1.1" } }, "sha512-p0W1WUkXqUXtmCL8wlkjToSXoqTj5zRH2dVI+yhxrFCiR236SdgZ+BGIZrx0yaE/igzttsTaVztbA7jMc8t6oQ=="],
+
+    "@mysten/walrus": ["@mysten/walrus@0.8.4", "", { "dependencies": { "@mysten/bcs": "1.9.2", "@mysten/sui": "1.45.0", "@mysten/utils": "0.2.0", "@mysten/walrus-wasm": "0.1.1", "dataloader": "^2.2.3" } }, "sha512-6pvp9/s0jHJb9uR6QjX8yCyzb0PbceOqylnUwNuMKvVG/cyHYgHSRlB4atQMJPHPPtspGnIYH53J5j+zd9+4/Q=="],
+
+    "@mysten/walrus-wasm": ["@mysten/walrus-wasm@0.1.1", "", {}, "sha512-j+12gNbPAIkgY7g1d4aCF2rXDpgTLQsyjEdu0s7A8xlu/95u5quP7Tc7Jz7VLFfbtkJigBpGyPZ/8J2tZv4cJA=="],
 
     "@mysten/window-wallet-core": ["@mysten/window-wallet-core@0.1.0", "", { "dependencies": { "@mysten/utils": "0.2.0", "jose": "^6.1.0", "valibot": "^0.36.0" } }, "sha512-QVFthpAv+HJBqoLjsE6gZylE28lrzEd/C68S5tyOCpRV6T3O+P3LCcFmNkLK8gNM6DJNHc/GZgM3f4rTNGOfAQ=="],
 
@@ -512,6 +520,8 @@
     "data-view-byte-length": ["data-view-byte-length@https://registry.npmjs.org/data-view-byte-length/-/data-view-byte-length-1.0.2.tgz", { "dependencies": { "call-bound": "^1.0.3", "es-errors": "^1.3.0", "is-data-view": "^1.0.2" } }],
 
     "data-view-byte-offset": ["data-view-byte-offset@https://registry.npmjs.org/data-view-byte-offset/-/data-view-byte-offset-1.0.1.tgz", { "dependencies": { "call-bound": "^1.0.2", "es-errors": "^1.3.0", "is-data-view": "^1.0.1" } }],
+
+    "dataloader": ["dataloader@2.2.3", "", {}, "sha512-y2krtASINtPFS1rSDjacrFgn1dcUuoREVabwlOGOe4SdxenREqwjwjElAdwvbGM7kgZz9a3KVicWR7vcz8rnzA=="],
 
     "debug": ["debug@https://registry.npmjs.org/debug/-/debug-4.4.3.tgz", { "dependencies": { "ms": "^2.1.3" } }],
 

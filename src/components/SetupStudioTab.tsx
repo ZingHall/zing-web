@@ -28,12 +28,11 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
   const handleSetupStudio = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentAccount) {
-      alert("Please connect your wallet first");
       return;
     }
 
     try {
-      await setupStudio();
+      await setupStudio({ suiAddress: currentAccount.address });
     } catch (error) {
       console.error({ error });
     }
@@ -41,7 +40,6 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
 
   const handleSetupFileKey = async () => {
     if (!currentAccount) {
-      alert("Please connect your wallet first");
       return;
     }
 
@@ -49,7 +47,6 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
     try {
       // TODO: Implement file key setup logic
       await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
-      alert("File key setup successful!");
     } catch (error) {
       alert("Failed to setup file key");
     } finally {
@@ -124,13 +121,10 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
               </div>
               {!isStudioActive(studio.period) && (
                 <button
-                  onClick={handleSetupFileKey}
-                  disabled={setupFileKeyLoading}
+                  onClick={() => setActiveTab("purchase")}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {setupFileKeyLoading
-                    ? "Setting up..."
-                    : "Go Purchase the Plan"}
+                  Go Purchase the Plan
                 </button>
               )}
             </div>
@@ -254,11 +248,11 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
             Setup your Studio to join Zing ecosystem
           </p>
           <button
-            type="submit"
+            onClick={handleSetupStudio}
             disabled={isSettingupStudio}
             className="w-full bg-black dark:bg-white text-white dark:text-black py-2 px-4 rounded font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSettingupStudio ? "Loading..." : "Embed Watermark"}
+            {isSettingupStudio ? "Loading..." : "Setup Studio"}
           </button>
         </div>
       )}

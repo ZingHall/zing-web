@@ -8,6 +8,7 @@ import {
 } from "@mysten/dapp-kit";
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppProvider } from "./context/appContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +39,9 @@ export default function RootLayout({
       >
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-            <WalletProvider>{children}</WalletProvider>
+            <WalletProvider autoConnect>
+              <AppProvider>{children}</AppProvider>
+            </WalletProvider>
           </SuiClientProvider>
         </QueryClientProvider>
       </body>
