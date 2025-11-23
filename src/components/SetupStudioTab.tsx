@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 import { useSetupStudio } from "@/app/hooks/mutations/useSetupStudio";
 import { useGetStorageSpace } from "@/app/hooks/queries/useGetStorageSpace";
+import { useSetupFileKey } from "@/app/hooks/mutations/useSetupFileKey";
 
 interface SetupStudioTabProps {
   setActiveTab: (tab: string) => void;
@@ -12,8 +12,6 @@ interface SetupStudioTabProps {
 
 export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
   const currentAccount = useCurrentAccount();
-  const [setupFileKeyLoading, setSetupFileKeyLoading] = useState(false);
-
   const suiClient = useSuiClient();
   const { data: studio } = useGetStudio(suiClient, currentAccount?.address);
   console.log({ studio });
@@ -38,19 +36,17 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
     }
   };
 
+  const { mutateAsync: setupFileKey, isPending: isSettingupFileKey } =
+    useSetupFileKey();
   const handleSetupFileKey = async () => {
     if (!currentAccount) {
       return;
     }
 
-    setSetupFileKeyLoading(true);
     try {
-      // TODO: Implement file key setup logic
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
+      await setupFileKey({ suiAddress: currentAccount.address });
     } catch (error) {
-      alert("Failed to setup file key");
-    } finally {
-      setSetupFileKeyLoading(false);
+      console.error(error);
     }
   };
 
@@ -60,10 +56,10 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
 
   const isStudioActive = (period: string[]) => {
     if (!period || period.length < 2) return false;
-    const now = Date.now();
     const startAt = parseInt(period[0]);
     const endAt = parseInt(period[1]);
-    return now >= startAt && now <= endAt;
+    const currentTime = new Date().getTime();
+    return currentTime >= startAt && currentTime <= endAt;
   };
 
   const getSubscriptionTiers = (monthlyFee: {
@@ -232,10 +228,10 @@ export default function SetupStudioTab({ setActiveTab }: SetupStudioTabProps) {
               {!studio.encrypted_file_key && (
                 <button
                   onClick={handleSetupFileKey}
-                  disabled={setupFileKeyLoading}
+                  disabled={isSettingupFileKey}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {setupFileKeyLoading ? "Setting up..." : "Setup File Key"}
+                  {isSettingupFileKey ? "Setting up..." : "Setup File Key"}
                 </button>
               )}
             </div>

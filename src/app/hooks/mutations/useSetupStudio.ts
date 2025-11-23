@@ -4,13 +4,14 @@ import {
   ZING_STUDIO_CONFIG_SHARED_OBJECT_REF,
   ZING_STUDIO_PACKAGE_ADDRESS,
 } from "@/lib/utils";
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getStudioQueryKey } from "../queries/useGetStudio";
 import { getStorageSpaceKey } from "../queries/useGetStorageSpace";
 
 export function useSetupStudio() {
+  const suiClient = useSuiClient();
   const queryClient = useQueryClient();
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction();
@@ -42,11 +43,16 @@ export function useSetupStudio() {
       const transactionResponse = await signAndExecuteTransaction({
         transaction: tx,
       });
-      console.log({ transactionResponse });
 
-      return transactionResponse;
+      return {
+        transactionResponse,
+        suiAddress,
+      };
     },
     onSuccess: async (res, variables) => {
+      await suiClient.waitForTransaction({
+        digest: res.transactionResponse.digest,
+      });
       await Promise.all([
         queryClient.refetchQueries({
           queryKey: getStudioQueryKey(variables.suiAddress),
