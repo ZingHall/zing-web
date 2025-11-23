@@ -3,7 +3,7 @@ import type { SuiClient } from "@mysten/sui/client";
 import { deriveStudioID } from "@/lib/utils";
 import { Studio } from "@/_generated/zing_studio/studio";
 
-async function fetchStudio(
+export async function fetchWorks(
   suiClient: SuiClient,
   owner: string,
 ): Promise<typeof Studio.$inferType | null> {
@@ -35,7 +35,7 @@ export function useGetStudio(suiClient?: SuiClient, owner?: string) {
       if (!suiClient || !owner) {
         throw new Error("SuiClient and owner are required");
       }
-      return fetchStudio(suiClient, owner);
+      return fetchWorks(suiClient, owner);
     },
     enabled: Boolean(suiClient && owner),
     retry: (failureCount, error) => {

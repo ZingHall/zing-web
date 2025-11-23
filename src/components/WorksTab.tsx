@@ -10,152 +10,113 @@ import {
   useGetDecodedArticle,
 } from "@/app/hooks/queries/useDecryptArticle";
 import { useAppContext } from "@/app/context/appContext";
-import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 import { useSessionKeyUtils } from "@/app/hooks/queries/useSessionKey";
 import { importFileKey } from "@/app/hooks/queries/useGetFileKey";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function WorksTab() {
-  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const queryClient = useQueryClient();
   const suiClient = useSuiClient();
   const currentAccount = useCurrentAccount();
+  const queryClient = useQueryClient();
   const { sealClient, fileKey, setFileKey } = useAppContext();
+  const sealSessoinKeyUtils = useSessionKeyUtils();
+
+  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
+  const [searchAddress, setSearchAddress] = useState("");
+  const [searchedCreator, setSearchedCreator] = useState<string | null>(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+
+  // Current user's works
   const { data: works } = useGetStudioWorks(suiClient, currentAccount?.address);
 
+  // Searched creator's works
+  const { data: searchedWorks } = useGetStudioWorks(
+    suiClient,
+    searchedCreator || undefined,
+  );
+
+  console.log({ searchedWorks });
+
+  // Decoded article for preview
   const { data: decodedArticle } = useGetDecodedArticle(
     suiClient,
     currentAccount?.address,
     selectedWork || undefined,
   );
 
-  const sealSessoinKeyUtils = useSessionKeyUtils();
-  const { data: studio } = useGetStudio(suiClient, currentAccount?.address);
-  const [isDecrypting, setIsDecrypting] = useState(false);
+  // Search submit
+  const handleSearchSubmit = () => {
+    if (!searchAddress.trim()) return;
+    setSearchedCreator(searchAddress.trim());
+    setSelectedWork(null);
+  };
+
+  // Decrypt FileKey
   const handleDecryptFileKey = async () => {
-    if (!studio || !studio.encrypted_file_key) return;
+    if (!sealClient) return;
     try {
       setIsDecrypting(true);
-      const fileKey = studio.encrypted_file_key;
+      if (!currentAccount) return;
       const sessionKey = await sealSessoinKeyUtils.createSessionKey({
         suiClient,
       });
-
-      if (!sessionKey) {
-        console.error("fail to fetch sessionKey");
-        return;
-      }
-      const txBytes =
-        await sealSessoinKeyUtils.createSealApproveTransactionBytes({
-          suiClient,
-          studioId: studio.id.id,
-        });
-
+      if (!sessionKey) throw new Error("Fail to create session key");
       const decryptedKey = await sealClient.decrypt({
-        data: new Uint8Array(fileKey),
+        data: new Uint8Array(fileKey as any),
         sessionKey,
-        txBytes,
+        txBytes: new Uint8Array(), // optional txBytes
       });
-
       const cryptoKey = await importFileKey(decryptedKey);
       setFileKey(cryptoKey);
-    } catch (error) {
-      console.error({ error });
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsDecrypting(false);
     }
   };
 
-  const filteredWorks = useMemo(() => {
-    if (!works || !Array.isArray(works)) return [];
-
-    if (!searchQuery.trim()) return works as Work[];
-
-    return works.filter(
-      (work) =>
-        work.id.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (work.blobs[0]?.blob_id &&
-          work.blobs[0].blob_id
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())),
-    ) as Work[];
-  }, [works, searchQuery]);
-
-  // Handle search and auto-select if exact match found
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-
-    if (query.trim() && works) {
-      const exactMatch = works.find(
-        (work) =>
-          work.id.id.toLowerCase() === query.toLowerCase() ||
-          (work.blobs[0]?.blob_id &&
-            work.blobs[0].blob_id.toLowerCase() === query.toLowerCase()),
-      );
-
-      if (exactMatch) {
-        setSelectedWork(exactMatch);
-      }
-    }
-  };
-
-  const formatFileSize = (bytes: string) => {
-    const size = parseInt(bytes);
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    if (size < 1024 * 1024 * 1024)
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
-
-  const formatStorageSize = (bytes: string) => {
-    const size = parseInt(bytes);
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    if (size < 1024 * 1024 * 1024)
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
-
+  // Memoized preview
   const { previewImageUrl, isOwner } = useMemo(() => {
     const article = decodedArticle?.works?.[0];
     if (!decodedArticle || !article)
       return { previewImageUrl: null, isOwner: !!decodedArticle?.isOwner };
-
     return {
       previewImageUrl: arrayBufferToImageUrl(article.bytes as any),
       isOwner: decodedArticle.isOwner,
     };
   }, [decodedArticle]);
 
+  console.log({ isOwner });
+
+  // Status message
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<"success" | "error" | null>(
     null,
   );
+
   useEffect(() => {
     if (!selectedWork) {
       setStatusMessage(null);
       setStatusType(null);
       return;
     }
-
     if (isOwner) {
       if (!fileKey) {
         setStatusType("error");
-        setStatusMessage("You must Decrypt your FileKey before decrypting.");
+        setStatusMessage("You must Decrypt your FileKey before get access to original image.");
       } else {
         setStatusType("success");
         setStatusMessage(
-          "You're verified ✅ you are the publisher. You can access the original image.",
+          "You're verified � you are the publisher. You can access the original image.",
         );
       }
     } else {
       setStatusMessage(null);
       setStatusType(null);
     }
-  }, [selectedWork, previewImageUrl, fileKey, isOwner]);
+  }, [selectedWork, fileKey, isOwner]);
 
+  // Invalidate article when fileKey changes
   useEffect(() => {
     if (fileKey && selectedWork && currentAccount) {
       queryClient.invalidateQueries({
@@ -167,7 +128,71 @@ export default function WorksTab() {
     }
   }, [fileKey, currentAccount, queryClient, selectedWork]);
 
-  console.log({ statusType, statusMessage, isOwner });
+  // Helpers
+  const formatStorageSize = (bytes: string) => {
+    const size = parseInt(bytes);
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    if (size < 1024 * 1024 * 1024)
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  };
+  const formatFileSize = (bytes: string) => {
+    const size = parseInt(bytes);
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    if (size < 1024 * 1024 * 1024)
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  };
+
+  const WorkCard = ({
+    work,
+    selectedWork,
+    setSelectedWork,
+  }: {
+    work: Work;
+    selectedWork: Work | null;
+    setSelectedWork: (work: Work) => void;
+  }) => (
+    <div
+      key={work.id.id}
+      onClick={() => setSelectedWork(work)}
+      className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
+        selectedWork?.id.id === work.id.id
+          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
+          : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+      }`}
+    >
+      <div className="flex items-start space-x-3">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Image alt="icon" src="/icon.svg" width={48} height={48} />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-black dark:text-zinc-50 truncate">
+            Article ID: {work.id.id.slice(0, 20)}...
+          </h3>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            Size: {formatFileSize(work.totalSize.toString())}
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Epoch: {work.registeredEpoch}
+          </p>
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              work.deletable
+                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+            }`}
+          >
+            {work.deletable ? "Active" : "Archived"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg h-full">
@@ -176,6 +201,7 @@ export default function WorksTab() {
           My Works
         </h2>
 
+        {/* File Key Status */}
         <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded mb-5">
           <h3 className="font-medium text-black dark:text-zinc-50 mb-2">
             File Key Status
@@ -183,10 +209,16 @@ export default function WorksTab() {
           <div className="flex items-center justify-between">
             <div className="flex space-x-2 items-center">
               <div
-                className={`w-3 h-3 rounded-full ${fileKey ? "bg-green-500" : "bg-red-500"}`}
-              ></div>
+                className={`w-3 h-3 rounded-full ${
+                  fileKey ? "bg-green-500" : "bg-red-500"
+                }`}
+              />
               <span
-                className={`text-sm font-medium ${fileKey ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                className={`text-sm font-medium ${
+                  fileKey
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
               >
                 {fileKey ? "Decrypted" : "Encrypted"}
               </span>
@@ -203,115 +235,81 @@ export default function WorksTab() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
+        {/* Search */}
+        <div className="relative flex items-center mb-4">
           <input
             type="text"
-            placeholder="Search by Article ID or Blob ID..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full p-3 pl-10 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-zinc-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search by Creator Address..."
+            value={searchAddress}
+            onChange={(e) => setSearchAddress(e.target.value)}
+            className="flex-1 p-3 pl-4 border border-zinc-300 dark:border-zinc-700 rounded-l-lg bg-white dark:bg-zinc-800 text-black dark:text-zinc-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
-          <svg
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <button
+            onClick={handleSearchSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg text-sm font-medium"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+            Search
+          </button>
         </div>
       </div>
 
+      {/* Works Panel */}
       <div className="flex h-[calc(100vh-200px)]">
-        {/* Left Side - Works Grid */}
-        <div className="w-1/2 p-6 border-r border-zinc-200 dark:border-zinc-700 overflow-y-auto">
-          {!works || works.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <svg
-                className="w-16 h-16 text-zinc-400 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-              <p className="text-zinc-500 dark:text-zinc-400 text-lg">
-                No works found
-              </p>
-              <p className="text-zinc-400 dark:text-zinc-500 text-sm mt-2">
-                Your watermarked works will appear here
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredWorks.map((work) => (
-                <div
-                  key={work.id.id}
-                  onClick={() => setSelectedWork(work)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    selectedWork?.id.id === work.id.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md"
-                      : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
-                  }`}
-                >
-                  <div className="flex items-start space-x-3">
-                    {/* Icon Avatar */}
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Image
-                          alt="zing-logo"
-                          src={"/icon.svg"}
-                          width={48}
-                          height={48}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Work Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-black dark:text-zinc-50 truncate">
-                        Article ID: {work.id.id.slice(0, 20)}...
-                      </h3>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        Size: {formatFileSize(work.totalSize.toString())}
-                      </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Epoch: {work.registeredEpoch}
-                      </p>
-                      <div className="flex items-center mt-2">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            work.deletable
-                              ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                              : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                          }`}
-                        >
-                          {work.deletable ? "Active" : "Archived"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+        <div className="w-1/2 p-6 border-r border-zinc-200 dark:border-zinc-700 overflow-y-auto flex flex-col gap-6">
+          {/* Top: Searched creator */}
+          {searchedCreator && (
+            <div>
+              <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                Works from {searchedCreator}
+              </h4>
+              {searchedWorks && searchedWorks.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {searchedWorks.map((work) => (
+                    <WorkCard
+                      key={work.id.id}
+                      work={work}
+                      selectedWork={selectedWork}
+                      setSelectedWork={setSelectedWork}
+                    />
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+                  No works found.
+                </p>
+              )}
             </div>
           )}
+
+          {/* Bottom: My works */}
+          <div>
+            <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              My Works
+            </h4>
+            {works && works.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {works.map((work) => (
+                  <WorkCard
+                    key={work.id.id}
+                    work={work}
+                    selectedWork={selectedWork}
+                    setSelectedWork={setSelectedWork}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+                No works found.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Right Side - Preview */}
+        {/* Right: Preview */}
         <div className="w-1/2 p-6 overflow-y-auto">
           {selectedWork ? (
             <div className="space-y-6">
+              {/* Preview and metadata (reuse your existing code) */}
               <div className="text-center">
                 <div
                   className="mx-auto mb-4 rounded-2xl overflow-hidden bg-zinc-200 dark:bg-zinc-700"
@@ -347,14 +345,11 @@ export default function WorksTab() {
                 </h3>
                 {statusMessage && (
                   <div
-                    className={`
-      mt-4 px-4 py-3 rounded-xl text-sm text-left
-      ${
-        statusType === "success"
-          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-          : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-      }
-    `}
+                    className={`mt-4 px-4 py-3 rounded-xl text-sm text-left ${
+                      statusType === "success"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                        : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                    }`}
                   >
                     {statusMessage}
                   </div>
@@ -400,90 +395,69 @@ export default function WorksTab() {
                     </p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                      Registered Epoch
-                    </h4>
-                    <p className="text-sm text-black dark:text-zinc-50">
-                      {selectedWork.registeredEpoch}
-                    </p>
-                  </div>
-                </div>
-
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
-                    Storage Information
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                    Registered Epoch
                   </h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                        Storage ID:
-                      </span>
-                      <span className="text-xs text-black dark:text-zinc-50 font-mono">
-                        {selectedWork.blobs[0].storage.id.id.slice(0, 20)}...
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                        Storage Size:
-                      </span>
-                      <span className="text-xs text-black dark:text-zinc-50">
-                        {formatStorageSize(selectedWork.storageSize.toString())}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                        Duration:
-                      </span>
-                      <span className="text-xs text-black dark:text-zinc-50">
-                        Epoch {selectedWork.blobs[0].storage.start_epoch} -{" "}
-                        {selectedWork.blobs[0].storage.end_epoch}
-                      </span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-black dark:text-zinc-50">
+                    {selectedWork.registeredEpoch}
+                  </p>
                 </div>
+              </div>
 
-                <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                      Status
-                    </h4>
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        selectedWork.deletable
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
-                      }`}
-                    >
-                      {selectedWork.deletable ? "Active" : "Archived"}
+              <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+                  Storage Information
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                      Storage ID:
+                    </span>
+                    <span className="text-xs text-black dark:text-zinc-50 font-mono">
+                      {selectedWork.blobs[0].storage.id.id.slice(0, 20)}...
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                      Storage Size:
+                    </span>
+                    <span className="text-xs text-black dark:text-zinc-50">
+                      {formatStorageSize(selectedWork.storageSize.toString())}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                      Duration:
+                    </span>
+                    <span className="text-xs text-black dark:text-zinc-50">
+                      Epoch {selectedWork.blobs[0].storage.start_epoch} -{" "}
+                      {selectedWork.blobs[0].storage.end_epoch}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Status
+                  </h4>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedWork.deletable
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                        : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300"
+                    }`}
+                  >
+                    {selectedWork.deletable ? "Active" : "Archived"}
+                  </span>
                 </div>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <svg
-                className="w-16 h-16 text-zinc-400 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
               <p className="text-zinc-500 dark:text-zinc-400 text-lg">
                 Select a work to preview
               </p>

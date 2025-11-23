@@ -1,7 +1,7 @@
 import { Article } from "@/_generated/zing_studio/article";
 import { useQuery } from "@tanstack/react-query";
-import type { SuiClient } from "@mysten/sui/client";
 import { deriveWorksID, ZING_STUDIO_ARTICLE_TYPES } from "@/lib/utils";
+import type { SuiClient } from "@mysten/sui/client";
 
 interface UseGetWorksResult {
   data: Work[];

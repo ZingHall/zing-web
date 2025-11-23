@@ -30,7 +30,8 @@ async function decodeArticle(
     },
   });
 
-  const isOwner = objectRes.error?.code !== "notExists";
+  const isOwner = objectRes.error?.code !== "dynamicFieldNotFound";
+  console.log({ foo: isOwner, bar: owner, baz: article.id.id, objectRes });
   if (objectRes.error?.code === "notExists") {
     console.error("Not owner");
     return {
