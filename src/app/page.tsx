@@ -60,23 +60,23 @@ export default function Home() {
           </h3>
           <ul className="space-y-2 text-zinc-700 dark:text-zinc-300">
             <li>
-              • <strong>LSB Steganography:</strong> Embeds watermarks in the
+              ‚Ä¢ <strong>LSB Steganography:</strong> Embeds watermarks in the
               least significant bits of image pixels
             </li>
             <li>
-              • <strong>Blockchain Integration:</strong> Uses Sui blockchain for
+              ‚Ä¢ <strong>Blockchain Integration:</strong> Uses Sui blockchain for
               secure watermark verification and ownership
             </li>
             <li>
-              • <strong>Studio System:</strong> Create your own watermarking
+              ‚Ä¢ <strong>Studio System:</strong> Create your own watermarking
               studio and monetize your services
             </li>
             <li>
-              • <strong>Tier Plans:</strong> Choose from flexible pricing plans
+              ‚Ä¢ <strong>Tier Plans:</strong> Choose from flexible pricing plans
               based on your watermarking needs
             </li>
             <li>
-              • <strong>Format Support:</strong> Works with PNG, JPG, and WebP
+              ‚Ä¢ <strong>Format Support:</strong> Works with PNG, JPG, and WebP
               formats (depending on your plan)
             </li>
           </ul>
