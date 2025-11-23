@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
-export default function EmbedTab() {
+export default function PublishTab() {
   const [embedFile, setEmbedFile] = useState<File | null>(null);
   const [embedMessage, setEmbedMessage] = useState("");
   const [embedLoading, setEmbedLoading] = useState(false);
   const [embedResult, setEmbedResult] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleEmbed = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,43 +42,65 @@ export default function EmbedTab() {
     }
   };
 
+  // Generate preview when a file is selected
+  useEffect(() => {
+    if (!embedFile) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(embedFile);
+    setPreviewUrl(url);
+
+    // Cleanup the object URL when the component unmounts or file changes
+    return () => URL.revokeObjectURL(url);
+  }, [embedFile]);
+
   return (
     <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold mb-4 text-black dark:text-zinc-50">
-        Embed Watermark
+        Publish your Image
       </h2>
       <form onSubmit={handleEmbed} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-            Upload PNG Image
+            Upload <span className="text-red-500">*PNG</span> Image
           </label>
+
           <input
+            id="file-upload"
             type="file"
             accept="image/png"
             onChange={(e) => setEmbedFile(e.target.files?.[0] || null)}
-            className="w-full p-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-black dark:text-zinc-50"
-            required
+            className="hidden"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-            Watermark Message
+
+          <label
+            htmlFor="file-upload"
+            className="w-full p-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-black dark:text-zinc-50 cursor-pointer text-center"
+          >
+            {embedFile ? embedFile.name : "Select PNG File"}
           </label>
-          <textarea
-            value={embedMessage}
-            onChange={(e) => setEmbedMessage(e.target.value)}
-            className="w-full p-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-black dark:text-zinc-50"
-            rows={4}
-            placeholder="Enter watermark message to embed..."
-            required
-          />
+
+          {previewUrl && (
+            <div className="mt-2 border border-zinc-300 dark:border-zinc-700 rounded p-2 max-w-1/2">
+              <Image
+                width={60}
+                height={60}
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-auto rounded"
+              />
+            </div>
+          )}
         </div>
+
         <button
           type="submit"
           disabled={embedLoading}
-          className="w-full bg-black dark:bg-white text-white dark:text-black py-2 px-4 rounded font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-5 w-full bg-black dark:bg-white text-white dark:text-black py-2 px-4 rounded font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {embedLoading ? "Embedding..." : "Embed Watermark"}
+          {embedLoading ? "Embedding..." : "Publish"}
         </button>
       </form>
 

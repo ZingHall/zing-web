@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import EmbedTab from "@/components/EmbedTab";
+import PublishTab from "@/components/PublishTab";
 import ExtractTab from "@/components/ExtractTab";
 import SetupStudioTab from "@/components/SetupStudioTab";
 import PurchaseTierTab from "@/components/PurchaseTierTab";
@@ -11,7 +11,7 @@ import "@mysten/dapp-kit/dist/index.css";
 const tabs = [
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  { id: "embed", label: "Embed Watermark", component: EmbedTab },
+  { id: "embed", label: "Publish Image", component: PublishTab },
   { id: "extract", label: "Extract Watermark", component: ExtractTab },
 ];
 
@@ -20,7 +20,7 @@ export default function Home() {
 
   const renderActiveComponent = () => {
     const ActiveComponent =
-      tabs.find((tab) => tab.id === activeTab)?.component || EmbedTab;
+      tabs.find((tab) => tab.id === activeTab)?.component || SetupStudioTab;
     return <ActiveComponent setActiveTab={setActiveTab} />;
   };
 
