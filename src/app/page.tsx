@@ -7,8 +7,10 @@ import WorksTab from "@/components/WorksTab";
 import SetupStudioTab from "@/components/SetupStudioTab";
 import PurchaseTierTab from "@/components/PurchaseTierTab";
 import "@mysten/dapp-kit/dist/index.css";
+import HowItWorksTab from "@/components/HowItWorksTab";
 
 const tabs = [
+  { id: "how-it-works", label: "How it works", component: HowItWorksTab },
   { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
   { id: "embed", label: "Upload Image", component: PublishTab },
@@ -52,35 +54,6 @@ export default function Home() {
 
         {/* Tab Content */}
         <div className="mb-8">{renderActiveComponent()}</div>
-
-        {/* How It Works Section */}
-        <div className="p-6 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-          <h3 className="text-xl font-semibold mb-3 text-black dark:text-zinc-50">
-            How Zing Watermark Works
-          </h3>
-          <ul className="space-y-2 text-zinc-700 dark:text-zinc-300">
-            <li>
-              ‚Ä¢ <strong>LSB Steganography:</strong> Embeds watermarks in the
-              least significant bits of image pixels
-            </li>
-            <li>
-              ‚Ä¢ <strong>Blockchain Integration:</strong> Uses Sui blockchain for
-              secure watermark verification and ownership
-            </li>
-            <li>
-              ‚Ä¢ <strong>Studio System:</strong> Create your own watermarking
-              studio and monetize your services
-            </li>
-            <li>
-              ‚Ä¢ <strong>Tier Plans:</strong> Choose from flexible pricing plans
-              based on your watermarking needs
-            </li>
-            <li>
-              ‚Ä¢ <strong>Format Support:</strong> Works with PNG, JPG, and WebP
-              formats (depending on your plan)
-            </li>
-          </ul>
-        </div>
       </main>
     </div>
   );

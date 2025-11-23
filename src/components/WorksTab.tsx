@@ -143,7 +143,7 @@ export default function WorksTab() {
     if (isOwner) {
       if (!fileKey) {
         setStatusType("error");
-        setStatusMessage("You must set up a FileKey before decrypting.");
+        setStatusMessage("You must Decrypt your FileKey before decrypting.");
       } else {
         setStatusType("success");
         setStatusMessage(
