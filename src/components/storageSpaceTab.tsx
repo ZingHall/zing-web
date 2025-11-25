@@ -9,6 +9,7 @@ import {
 } from "@mysten/dapp-kit";
 import { useGetStorageTreasury } from "@/app/hooks/queries/useGetStorageTreasury";
 import {
+  formatStorageSize,
   WAL_PACKAGE_ADDRESS,
   WAL_TESTNET_TYPE,
   WALRUS_SYSTEM_SHARED_OBJECT_REF,
@@ -170,7 +171,7 @@ export default function StorageStatusPage() {
               className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg"
             >
               <p>Epoch: {epoch.key}</p>
-              <p>Storage Size: {epoch.value.storage_size}</p>
+              <p>Storage Size: {formatStorageSize(epoch.value.storage_size)}</p>
             </div>
           ))}
         </div>
@@ -191,7 +192,7 @@ export default function StorageStatusPage() {
 
         <div className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg">
           <p>ID: {storageTreasury?.wal_treasury.id.id}</p>
-          <p>Balance: {storageTreasury?.wal_treasury.balance.value}</p>
+          <p>Balance: {Number(storageTreasury?.wal_treasury.balance.value) /10 **9}</p>
         </div>
       </div>
     </div>

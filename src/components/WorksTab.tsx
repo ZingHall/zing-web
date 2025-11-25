@@ -13,6 +13,7 @@ import { useAppContext } from "@/app/context/appContext";
 import { useSessionKeyUtils } from "@/app/hooks/queries/useSessionKey";
 import { importFileKey } from "@/app/hooks/queries/useGetFileKey";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatFileSize, formatStorageSize } from "@/lib/utils";
 
 export default function WorksTab() {
   const suiClient = useSuiClient();
@@ -129,22 +130,6 @@ export default function WorksTab() {
   }, [fileKey, currentAccount, queryClient, selectedWork]);
 
   // Helpers
-  const formatStorageSize = (bytes: string) => {
-    const size = parseInt(bytes);
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    if (size < 1024 * 1024 * 1024)
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
-  const formatFileSize = (bytes: string) => {
-    const size = parseInt(bytes);
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    if (size < 1024 * 1024 * 1024)
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(size / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
 
   const WorkCard = ({
     work,

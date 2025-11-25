@@ -389,9 +389,16 @@ export default function PublishTab() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300">
-                Upload <span className="text-red-500">*PNG</span> Image
-              </label>
+              <div className="text-sm font-medium mb-2 text-zinc-700 dark:text-zinc-300 flex justify-between">
+                <label>
+                  Upload <span className="text-red-500">*PNG</span> Image
+                </label>
+                <div className="text-gray-600">
+                  Uploading to Storage Nodes takes around{" "}
+                  <span className="text-red-500/80">30 seconds</span> as we didn&apos;t
+                  use any publisher to upload-relay
+                </div>
+              </div>
 
               <input
                 id="file-upload"
