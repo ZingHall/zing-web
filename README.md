@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zing - Decentralized Content Creation Platform
 
-## Getting Started
+Zing is a comprehensive decentralized platform built on Sui blockchain that enables content creators to publish, monetize, and manage their digital works with built-in storage, subscription, and identity verification systems.
 
-First, run the development server:
+## 🌟 Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Zing consists of multiple interconnected modules that provide a complete ecosystem for content creators:
+
+- **ZingStudio**: Personal studios for content creation and management
+- **ZingIdentity**: Decentralized identity verification system
+- **ZingGovernance**: Governance and treasury management
+- **ZingFramework**: Core utilities and data structures
+
+## 🏗️ Architecture
+
+![Studio Architecture](./assets/studio.jpeg)
+
+![Identity Architecture](./assets/identity.jpeg)
+
+![Watermark & Layered Encryption Architecture](./assets/encryption-watermark.jpeg)
+```
+                  ┌────────────────────────────┐
+                  │        Seal Service        │
+                  │ (Root KMS / Access Policy) │
+                  └─────────────┬──────────────┘
+                                │
+                       Seal encrypts FileKey
+                                ▼
+                 ┌──────────────────────────────┐
+                 │        Encrypted FileKey     │
+                 │ (stored with file metadata)  │
+                 └─────────────┬────────────────┘
+                               │
+                       Request from user
+                               │
+                               ▼
+       ┌───────────────────────────────────────────────┐
+       │               TEE (Nitro Enclave)             │
+       │-----------------------------------------------│
+       │ • Authenticates requester (linked wallet)     │
+       │ • Calls Seal once to decrypt FileKey          │
+       │ • Caches decrypted FileKey in secure memory   │
+       │ • Uses FileKey (AES-256-GCM) to encrypt/      │
+       │   decrypt file content locally                │
+       └───────────────────────────────────────────────┘
+                               │
+                               ▼
+                    ┌────────────────────┐
+                    │   Encrypted File   │
+                    │ (stored via Walrus)│
+                    └────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Flow Description:**
+1. **Seal Service** encrypts the FileKey using root KMS and access policies
+2. **Encrypted FileKey** is stored alongside file metadata
+3. **User Request** triggers the decryption process
+4. **TEE (Nitro Enclave)** securely handles the decryption:
+   - Authenticates the requester via linked wallet
+   - Calls Seal service to decrypt the FileKey
+   - Caches the decrypted FileKey in secure memory
+   - Uses FileKey for local file encryption/decryption
+5. **Encrypted File** is stored on Walrus for decentralized storage
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Core Components
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 1. Studio System
+- **Personal Studios**: Each creator has a unique studio (shared object) for managing their content
+- **Content Management**: Support for articles with blob storage on Walrus
+- **Subscription Model**: Monthly subscription fees for accessing premium content
+- **Membership System**: Time-based access control for subscribers
 
-## Learn More
+#### 2. Storage Management
+- **Walrus Integration**: Decentralized storage using Walrus protocol
+- **Storage Treasury**: Centralized pool for managing storage resources across epochs
+- **Tiered Storage Plans**: Multiple storage tiers with different pricing and limits
+- **Automatic Renewal**: Storage can be extended before expiration
 
-To learn more about Next.js, take a look at the following resources:
+#### 3. Identity & Access Control
+- **Decentralized Identity**: Verifiable identity system for creators and users
+- **Seal-based Access**: Cryptographic access control for premium content
+- **Platform Integration**: Support for external identity platforms
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### 4. Economic Model
+- **Subscription Fees**: USD-denominated monthly fees for content access
+- **Storage Costs**: WAL token payments for storage operations
+- **Donation System**: Direct support mechanism for creators
+- **Treasury Management**: Governance-controlled treasury operations
