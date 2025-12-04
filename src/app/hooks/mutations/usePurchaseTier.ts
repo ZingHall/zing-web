@@ -17,6 +17,7 @@ import { SUI_TYPE_ARG } from "@mysten/sui/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getStudioQueryKey } from "../queries/useGetStudio";
 import { getStorageSpaceKey } from "../queries/useGetStorageSpace";
+import { toast } from "sonner";
 
 interface PurchaseStorageTierParams {
   suiAddress: string;
@@ -128,6 +129,11 @@ export function usePurchaseStorageTier() {
           queryKey: getStorageSpaceKey(variables.suiAddress),
         }),
       ]);
+
+      toast.success("Transaction success");
+    },
+    onError: (err) => {
+      toast.error(err.message);
     },
   });
 }

@@ -18,6 +18,7 @@ import {
   ZING_STUDIO_PACKAGE_ADDRESS,
 } from "@/lib/utils";
 import { useAppContext } from "@/app/context/appContext";
+import { toast } from "sonner";
 
 export default function StorageStatusPage() {
   const { suiJsonRpcClient } = useAppContext();
@@ -111,33 +112,41 @@ export default function StorageStatusPage() {
   // ------------------------------
 
   const handleFund = async () => {
-    const amount = Number(0.5 * 10 ** 9);
-    if (!amount) return alert("Invalid amount");
+    try {
+      const amount = Number(0.5 * 10 ** 9);
+      if (!amount) return alert("Invalid amount");
 
-    const tx = fundStorage(amount);
+      const tx = fundStorage(amount);
 
-    await signAndExecute({
-      transaction: tx,
-      chain: "sui:testnet",
-    });
+      await signAndExecute({
+        transaction: tx,
+        chain: "sui:testnet",
+      });
 
-    alert("Fund storage treasury success!");
+      toast.success("Fund storage treasury success!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const handleReserve = async () => {
-    if (!currentEopch || !currentAccount) return;
-    const amount = 10 ** 8;
-    const start = Number(currentEopch);
-    const end = Number(currentEopch + 2);
+    try {
+      if (!currentEopch || !currentAccount) return;
+      const amount = 10 ** 8;
+      const start = Number(currentEopch);
+      const end = Number(currentEopch + 2);
 
-    const tx = reserveSpace(currentAccount.address, amount, start, end);
+      const tx = reserveSpace(currentAccount.address, amount, start, end);
 
-    await signAndExecute({
-      transaction: tx,
-      chain: "sui:testnet",
-    });
+      await signAndExecute({
+        transaction: tx,
+        chain: "sui:testnet",
+      });
 
-    alert("Reserved storage successfully!");
+      toast.success("Reserved storage successfully!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   // ------------------------------
@@ -192,7 +201,10 @@ export default function StorageStatusPage() {
 
         <div className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg">
           <p>ID: {storageTreasury?.wal_treasury.id.id}</p>
-          <p>Balance: {Number(storageTreasury?.wal_treasury.balance.value) /10 **9}</p>
+          <p>
+            Balance:{" "}
+            {Number(storageTreasury?.wal_treasury.balance.value) / 10 ** 9}
+          </p>
         </div>
       </div>
     </div>
