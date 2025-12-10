@@ -63,12 +63,13 @@ export default function PublishTab() {
           studioId: studio.id.id,
         });
 
+      const data = new Uint8Array(fileKey);
       const decryptedKey = await sealClient.decrypt({
-        data: new Uint8Array(fileKey),
+        data,
         sessionKey,
         txBytes,
       });
-
+      console.log({ decryptedKey });
       const cryptoKey = await importFileKey(decryptedKey);
       setFileKey(cryptoKey);
     } catch (error) {
@@ -395,8 +396,8 @@ export default function PublishTab() {
                 </label>
                 <div className="text-gray-600">
                   Uploading to Storage Nodes takes around{" "}
-                  <span className="text-red-500/80">30 seconds</span> as we didn&apos;t
-                  use any publisher to upload-relay
+                  <span className="text-red-500/80">30 seconds</span> as we
+                  didn&apos;t use any publisher to upload-relay
                 </div>
               </div>
 

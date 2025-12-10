@@ -24,7 +24,8 @@ export default function StorageStatusPage() {
   const { suiJsonRpcClient } = useAppContext();
   const client = useSuiClient();
   const currentAccount = useCurrentAccount();
-  const { data: storageTreasury } = useGetStorageTreasury(client);
+  const { data: storageTreasury, refetch: refetchStorageTreasury } =
+    useGetStorageTreasury(client);
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const [currentEopch, setCurrentEpoch] = useState<number>();
 
@@ -118,10 +119,13 @@ export default function StorageStatusPage() {
 
       const tx = fundStorage(amount);
 
-      await signAndExecute({
+      const { digest } = await signAndExecute({
         transaction: tx,
         chain: "sui:testnet",
       });
+
+      await client.waitForTransaction({ digest });
+      await refetchStorageTreasury();
 
       toast.success("Fund storage treasury success!");
     } catch (error: any) {
@@ -132,16 +136,19 @@ export default function StorageStatusPage() {
   const handleReserve = async () => {
     try {
       if (!currentEopch || !currentAccount) return;
-      const amount = 10 ** 8;
+      const amount = 66034000;
       const start = Number(currentEopch);
       const end = Number(currentEopch + 2);
 
       const tx = reserveSpace(currentAccount.address, amount, start, end);
 
-      await signAndExecute({
+      const { digest } = await signAndExecute({
         transaction: tx,
         chain: "sui:testnet",
       });
+
+      await client.waitForTransaction({ digest });
+      await refetchStorageTreasury();
 
       toast.success("Reserved storage successfully!");
     } catch (error: any) {
@@ -174,15 +181,20 @@ export default function StorageStatusPage() {
         </div>
 
         <div className="space-y-4">
-          {storageTreasury?.storages_by_epoch.contents.map((epoch) => (
-            <div
-              key={epoch.key}
-              className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg"
-            >
-              <p>Epoch: {epoch.key}</p>
-              <p>Storage Size: {formatStorageSize(epoch.value.storage_size)}</p>
-            </div>
-          ))}
+          {storageTreasury?.storages_by_epoch.contents
+            .filter((epoch) => epoch.value.start_epoch >= (currentEopch || 0))
+            .sort((a, b) => a.value.start_epoch - b.value.start_epoch)
+            .map((epoch) => (
+              <div
+                key={epoch.key}
+                className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              >
+                <p>Epoch: {epoch.key}</p>
+                <p>
+                  Storage Size: {formatStorageSize(epoch.value.storage_size)}
+                </p>
+              </div>
+            ))}
         </div>
       </div>
 
