@@ -175,7 +175,7 @@ export default function Home() {
                 </label>
                 <input
                   type="file"
-                  accept="image/png"
+                  accept="image/jpeg, .jpeg, .jpg, .png"
                   onChange={(e) => setExtractFile(e.target.files?.[0] || null)}
                   className="w-full p-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-black dark:text-zinc-50"
                   required
