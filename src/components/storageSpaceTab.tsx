@@ -169,15 +169,23 @@ export default function StorageStatusPage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Storages by Epoch</h2>
 
-          {/* Action button */}
-          {currentEopch && (
+          <div className="space-x-4">
+            {/* Action button */}
+            {currentEopch && (
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleReserve}
+              >
+                Topup Storage at Epoch {currentEopch} to {currentEopch + 2}
+              </button>
+            )}
             <button
               className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-              onClick={handleReserve}
+              onClick={refetchStorageTreasury}
             >
-              Topup Storage at Epoch {currentEopch} to {currentEopch + 2}
+              Refresh
             </button>
-          )}
+          </div>
         </div>
 
         <div className="space-y-4">
