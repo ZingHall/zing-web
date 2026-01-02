@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SetupStudioTab from "@/components/SetupStudioTab";
@@ -11,8 +9,7 @@ const tabs = [
   // { id: "how-it-works", label: "How it works", component: HowItWorksTab },
   // { id: "studio", label: "Setup Studio", component: SetupStudioTab },
   // { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  // { id: "publish", label: "Upload Image", component: PublishTab },
-  // { id: "works", label: "Works", component: WorksTab },
+  // { id: "publish", label: "upload image", component: publishtab }, { id: "works", label: "works", component: workstab },
   {
     id: "storage-treasury",
     label: "Storage Treasury",
@@ -21,7 +18,7 @@ const tabs = [
   { id: "embed", label: "Embed", component: EmbedTab },
 ];
 
-export default function Home() {
+export default function App() {
   const [activeTab, setActiveTab] = useState("studio");
 
   const renderActiveComponent = () => {
@@ -33,7 +30,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
       <Navbar />
-
       <main className="max-w-6xl mx-auto p-8">
         {/* Tab Navigation */}
         <div className="mb-8">

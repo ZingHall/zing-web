@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import {

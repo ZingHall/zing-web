@@ -228,8 +228,8 @@ function encodeQuiltPatchId(id: typeof QuiltPatchId.$inferInput) {
 function urlSafeBase64(bytes: Uint8Array): string {
   return toBase64(bytes)
     .replace(/=*$/, "")
-    .replaceAll("+", "-")
-    .replaceAll("/", "_");
+    .replace("+", "-")
+    .replace("/", "_");
 }
 function getMaxFaultyNodes(nShards: number): number {
   return Math.floor((nShards - 1) / 3);

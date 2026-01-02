@@ -1,0 +1,285 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* v4 uses a simple selector for dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Radii - v4 uses --radius-* naming convention */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Mapping theme variables to Tailwind utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Chart & Sidebar */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  :root {
+    /* Light mode - Orange-red theme matching #FF4D13 */
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(20 14.3% 4.1%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(20 14.3% 4.1%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(20 14.3% 4.1%);
+
+    --primary: hsl(14 100% 54%); /* #FF4D13 */
+    --primary-foreground: hsl(0 0% 100%);
+
+    --secondary: hsl(14 100% 96%);
+    --secondary-foreground: hsl(14 100% 20%);
+
+    --muted: hsl(20 40% 96%);
+    --muted-foreground: hsl(20 16% 47%);
+
+    --accent: hsl(14 100% 54%);
+    --accent-foreground: hsl(0 0% 100%);
+
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(60 9.1% 97.8%);
+
+    --border: hsl(20 32% 91%);
+    --input: hsl(20 32% 91%);
+    --ring: hsl(14 100% 54%);
+
+    --radius: 0.5rem;
+
+    --chart-1: hsl(14 100% 54%);
+    --chart-2: hsl(25 100% 54%);
+
+    --sidebar-background: hsl(14 100% 98%);
+    --sidebar-foreground: hsl(14 30% 20%);
+    --sidebar-primary: hsl(14 100% 54%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(14 100% 96%);
+    --sidebar-accent-foreground: hsl(14 100% 20%);
+    --sidebar-border: hsl(20 30% 91%);
+    --sidebar-ring: hsl(14 100% 54%);
+  }
+
+  .dark {
+    /* Dark mode - Orange-red accent on dark background */
+    --background: hsl(220 30% 6%);
+    --foreground: hsl(20 100% 95%);
+
+    --card: hsl(220 25% 8%);
+    --card-foreground: hsl(20 100% 95%);
+
+    --popover: hsl(220 25% 8%);
+    --popover-foreground: hsl(20 100% 95%);
+
+    --primary: hsl(14 100% 54%); /* #FF4D13 */
+    --primary-foreground: hsl(0 0% 100%);
+
+    --secondary: hsl(220 30% 12%);
+    --secondary-foreground: hsl(14 100% 80%);
+
+    --muted: hsl(220 30% 12%);
+    --muted-foreground: hsl(20 20% 60%);
+
+    --accent: hsl(14 95% 58%);
+    --accent-foreground: hsl(0 0% 100%);
+
+    --destructive: hsl(0 75% 55%);
+    --destructive-foreground: hsl(0 0% 100%);
+
+    --border: hsl(220 30% 15%);
+    --input: hsl(220 30% 15%);
+    --ring: hsl(14 100% 54%);
+
+    --chart-1: hsl(14 100% 54%);
+    --chart-2: hsl(25 100% 54%);
+
+    --sidebar-background: hsl(220 30% 8%);
+    --sidebar-foreground: hsl(20 100% 95%);
+    --sidebar-primary: hsl(14 100% 54%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(220 30% 12%);
+    --sidebar-accent-foreground: hsl(14 100% 80%);
+    --sidebar-border: hsl(220 30% 15%);
+    --sidebar-ring: hsl(14 100% 54%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Sidebar + dropdown hover timing */
+  [data-sidebar] [data-sidebar-menu-button],
+  [data-sidebar] [data-sidebar-menu-sub-button],
+  [data-radix-dropdown-menu-content] [role="menuitem"] {
+    transition-property: background-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+    transition-delay: 40ms;
+  }
+}
+
+/* Hide scrollbar */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Styled scrollbar (containers only) */
+@utility scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+@utility scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: red;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+/* Range slider */
+@utility range-slider {
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 9999px;
+  outline: none;
+  background: linear-gradient(
+    to right,
+    var(--primary) 0%,
+    var(--primary) var(--progress),
+    var(--muted) var(--progress),
+    var(--muted) 100%
+  );
+}
+
+@utility range-slider {
+  &::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: transparent; /* Make track transparent */
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 9999px;
+    background: var(--primary);
+    cursor: pointer;
+    margin-top: -6px;
+  }
+
+  &::-moz-range-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--muted);
+  }
+
+  &::-moz-range-progress {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+
+  &::-moz-range-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 9999px;
+    background: var(--primary);
+    border: none;
+    cursor: pointer;
+  }
+}
+
+/* Tiptap editor */
+.ProseMirror {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  outline: none !important;
+}
+
+h1.tiptap-heading {
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+h2.tiptap-heading {
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+h3.tiptap-heading {
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--accent-foreground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+  content: attr(data-placeholder);
+}

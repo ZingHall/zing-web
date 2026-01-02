@@ -1,5 +1,3 @@
-"use client";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import {
   createNetworkConfig,
@@ -10,16 +8,6 @@ import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProvider } from "./context/appContext";
 import { Toaster } from "@/components/sonner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -35,9 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body>
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
             <WalletProvider autoConnect>

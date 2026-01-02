@@ -1,9 +1,6 @@
-"use client";
-
 import { useGetStudioWorks, Work } from "@/app/hooks/queries/useGetStudioWorks";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useState, useMemo, useEffect } from "react";
-import Image from "next/image";
 import {
   arrayBufferToImageUrl,
   getDecodedArticleQueryKey,
@@ -152,7 +149,7 @@ export default function WorksTab() {
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Image alt="icon" src="/icon.svg" width={48} height={48} />
+            <img alt="icon" src="/icon.svg" width={48} height={48} />
           </div>
         </div>
         <div className="flex-1 min-w-0">

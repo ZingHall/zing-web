@@ -1,7 +1,9 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
+import init, {
+  wasm_embed_message,
+  wasm_extract_message,
+} from "@zing-protocol/stego-wasm";
+import wasmUrl from "@zing-protocol/stego-wasm/zing_stego_wasm_bg.wasm?url";
 
 export default function Home() {
   const [embedFile, setEmbedFile] = useState<File | null>(null);
@@ -14,33 +16,37 @@ export default function Home() {
   const [extractedMessage, setExtractedMessage] = useState<string | null>(null);
   const [extractError, setExtractError] = useState<string | null>(null);
 
+  // Helper to convert File to Uint8Array
+  const fileToUint8Array = async (file: File): Promise<Uint8Array> => {
+    const buffer = await file.arrayBuffer();
+    return new Uint8Array(buffer);
+  };
+
   const handleEmbed = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!embedFile || !embedMessage) return;
 
     setEmbedLoading(true);
-    setEmbedResult(null);
-
     try {
-      const formData = new FormData();
-      formData.append("image", embedFile);
-      formData.append("message", embedMessage);
+      // 1. Convert image to bytes
+      const imageBytes = await fileToUint8Array(embedFile);
 
-      const response = await fetch("/api/stego/embed", {
-        method: "POST",
-        body: formData,
+      // 2. Call WASM function (assuming it returns Uint8Array)
+      console.log({ embedMessage });
+      const resultBytes = wasm_embed_message(imageBytes, embedMessage);
+
+      // 3. Create a download link from the result
+      const blob = new Blob([new Uint8Array(resultBytes)], {
+        type: "image/png",
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to embed message");
-      }
-
-      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       setEmbedResult(url);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to embed message");
+      console.error(error);
+      alert(
+        "Stego Error: " +
+          (error instanceof Error ? error.message : "Check image format"),
+      );
     } finally {
       setEmbedLoading(false);
     }
@@ -51,45 +57,43 @@ export default function Home() {
     if (!extractFile) return;
 
     setExtractLoading(true);
-    setExtractedMessage(null);
     setExtractError(null);
-
     try {
-      const formData = new FormData();
-      formData.append("image", extractFile);
+      const imageBytes = await fileToUint8Array(extractFile);
 
-      const response = await fetch("/api/stego/extract", {
-        method: "POST",
-        body: formData,
-      });
+      // Call WASM extract
+      const message = wasm_extract_message(imageBytes);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to extract message");
-      }
-
-      setExtractedMessage(data.message);
+      setExtractedMessage(message);
     } catch (error) {
-      setExtractError(
-        error instanceof Error ? error.message : "Failed to extract message",
-      );
+      setExtractError("No hidden message found or invalid image.");
     } finally {
       setExtractLoading(false);
     }
   };
 
+  useEffect(() => {
+    const initWasm = async () => {
+      try {
+        await init(wasmUrl);
+        console.log("WASM Initialized");
+      } catch (err) {
+        console.error("Failed to initialize WASM", err);
+      }
+    };
+    initWasm();
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black p-8">
       <main className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-4">
-          <Image
+          <img
             className="dark:invert"
             src="/next.svg"
             alt="Next.js logo"
             width={100}
             height={20}
-            priority
           />
           <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
             Steganography Test
@@ -150,13 +154,12 @@ export default function Home() {
                   Download Embedded Image
                 </a>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded p-2">
-                  <Image
+                  <img
                     src={embedResult}
                     alt="Embedded"
                     width={800}
                     height={600}
                     className="w-full h-auto"
-                    unoptimized
                   />
                 </div>
               </div>

@@ -1,7 +1,4 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { importFileKey } from "@/app/hooks/queries/useGetFileKey";
 import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
@@ -425,7 +422,7 @@ export default function PublishTab() {
 
               {previewUrl && (
                 <div className="mt-2 border border-zinc-300 dark:border-zinc-700 rounded p-2 max-w-xs">
-                  <Image
+                  <img
                     width={300}
                     height={300}
                     src={previewUrl}

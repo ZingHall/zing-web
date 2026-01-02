@@ -1,5 +1,3 @@
-"use client";
-
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useGetStudio } from "@/app/hooks/queries/useGetStudio";
 import { useSetupStudio } from "@/app/hooks/mutations/useSetupStudio";
