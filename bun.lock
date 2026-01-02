@@ -9,6 +9,7 @@
         "@mysten/seal": "^0.9.4",
         "@mysten/sui": "^1.45.0",
         "@mysten/walrus": "^0.8.4",
+        "@mysten/walrus-wasm": "^0.2.0",
         "@opennextjs/cloudflare": "^1.14.7",
         "@tanstack/react-query": "^5.90.10",
         "lucide-react": "^0.555.0",
@@ -404,7 +405,7 @@
 
     "@mysten/walrus": ["@mysten/walrus@0.8.6", "", { "dependencies": { "@mysten/bcs": "1.9.2", "@mysten/sui": "1.45.2", "@mysten/utils": "0.2.0", "@mysten/walrus-wasm": "0.1.1", "dataloader": "^2.2.3" } }, "sha512-ncaYuzOIik92ELpHbPW16YJJfOCcWDl0V2+l1dzTkQoSVEYjVE2jTZTqA5tI5g99tdDqtbkBUzmtFXChjrIp7w=="],
 
-    "@mysten/walrus-wasm": ["@mysten/walrus-wasm@0.1.1", "", {}, "sha512-j+12gNbPAIkgY7g1d4aCF2rXDpgTLQsyjEdu0s7A8xlu/95u5quP7Tc7Jz7VLFfbtkJigBpGyPZ/8J2tZv4cJA=="],
+    "@mysten/walrus-wasm": ["@mysten/walrus-wasm@0.2.0", "", {}, "sha512-QYZoS6CIoFnVxqYClXkwgeoUjnNUyPdXwoD1Re4Xo/TVdXXmpH46akodNJ+e6egUSrjzHgeiRgfAuq57sDXGNA=="],
 
     "@mysten/window-wallet-core": ["@mysten/window-wallet-core@0.1.1", "", { "dependencies": { "@mysten/utils": "0.2.0", "jose": "^6.1.0", "valibot": "^1.2.0" } }, "sha512-TboJvuqXvJbKy0sqK72kR3RXp7SLkgNfEaNsKWsSUwD+wV9+h/S3wtO+E+yFmPgHgOr8c7HJIQLAdunMssKZtg=="],
 
@@ -2187,6 +2188,8 @@
     "@isaacs/cliui/strip-ansi": ["strip-ansi@7.1.2", "", { "dependencies": { "ansi-regex": "^6.0.1" } }, "sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA=="],
 
     "@isaacs/cliui/wrap-ansi": ["wrap-ansi@8.1.0", "", { "dependencies": { "ansi-styles": "^6.1.0", "string-width": "^5.0.1", "strip-ansi": "^7.0.1" } }, "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ=="],
+
+    "@mysten/walrus/@mysten/walrus-wasm": ["@mysten/walrus-wasm@0.1.1", "", {}, "sha512-j+12gNbPAIkgY7g1d4aCF2rXDpgTLQsyjEdu0s7A8xlu/95u5quP7Tc7Jz7VLFfbtkJigBpGyPZ/8J2tZv4cJA=="],
 
     "@node-minify/core/glob": ["glob@9.3.5", "", { "dependencies": { "fs.realpath": "^1.0.0", "minimatch": "^8.0.2", "minipass": "^4.2.4", "path-scurry": "^1.6.1" } }, "sha512-e1LleDykUz2Iu+MTYdkSsuWX8lvAjAcs0Xef0lNIu0S2wOAzuTxCJtcd9S3cijlwYF18EsU3rzb8jPVobxDh9Q=="],
 
