@@ -17,6 +17,7 @@ import {
 } from "@/lib/utils";
 import { useAppContext } from "@/app/context/appContext";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 export default function StorageStatusPage() {
   const { suiJsonRpcClient } = useAppContext();
@@ -25,17 +26,16 @@ export default function StorageStatusPage() {
   const { data: storageTreasury, refetch: refetchStorageTreasury } =
     useGetStorageTreasury(client);
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
-  const [currentEopch, setCurrentEpoch] = useState<number>();
 
-  useEffect(() => {
-    const foo = async () => {
-      const system = await suiJsonRpcClient.walrus.systemState();
-      setCurrentEpoch(system.committee.epoch);
-    };
-
-    foo();
-  }, [suiJsonRpcClient.walrus]);
-
+  const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
+    queryKey: ["walrusSystem"],
+    queryFn: async () => suiJsonRpcClient.walrus.systemState(),
+    enabled: !!suiJsonRpcClient,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+  const currentEopch = walrusSystem?.committee.epoch;
+  console.log([walrusSystem]);
   // ------------------------------
   // TX BUILDERS
   // ------------------------------
@@ -179,7 +179,10 @@ export default function StorageStatusPage() {
             )}
             <button
               className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-              onClick={refetchStorageTreasury}
+              onClick={async () => {
+                await refetchWalrusSystem();
+                await refetchStorageTreasury();
+              }}
             >
               Refresh
             </button>

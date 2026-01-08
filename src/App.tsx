@@ -19,12 +19,12 @@ const tabs = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("studio");
+  const [activeTab, setActiveTab] = useState("storage-treasury");
 
   const renderActiveComponent = () => {
     const ActiveComponent =
-      tabs.find((tab) => tab.id === activeTab)?.component || SetupStudioTab;
-    return <ActiveComponent setActiveTab={setActiveTab} />;
+      tabs.find((tab) => tab.id === activeTab)?.component || StorageSpaceTab;
+    return <ActiveComponent />;
   };
 
   return (
