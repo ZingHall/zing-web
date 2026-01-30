@@ -1,31 +1,27 @@
-import { useEffect, useState } from "react";
 import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import {
   useSuiClient,
   useSignAndExecuteTransaction,
   useCurrentAccount,
 } from "@mysten/dapp-kit";
-import { useGetStorageTreasury } from "@/app/hooks/queries/useGetStorageTreasury";
-import {
-  formatStorageSize,
-  WAL_PACKAGE_ADDRESS,
-  WAL_TESTNET_TYPE,
-  WALRUS_SYSTEM_SHARED_OBJECT_REF,
-  ZING_STORAGE_TREASURY_SHARED_OBJECT_REF,
-  ZING_STUDIO_CONFIG_SHARED_OBJECT_REF,
-  ZING_STUDIO_PACKAGE_ADDRESS,
-} from "@/lib/utils";
+import { formatStorageSize, WAL_TESTNET_TYPE } from "@/lib/utils";
 import { useAppContext } from "@/app/context/appContext";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useZingClient, useZingQuery, Storage } from "@zing-protocol/zing-sdk";
 
 export default function StorageStatusPage() {
   const { suiJsonRpcClient } = useAppContext();
   const client = useSuiClient();
   const currentAccount = useCurrentAccount();
   const { data: storageTreasury, refetch: refetchStorageTreasury } =
-    useGetStorageTreasury(client);
+    useZingQuery({
+      method: "getStorageTreasury",
+      params: [],
+    });
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+
+  const zingClient = useZingClient();
 
   const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
@@ -35,7 +31,6 @@ export default function StorageStatusPage() {
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
   const currentEopch = walrusSystem?.committee.epoch;
-  console.log([walrusSystem]);
   // ------------------------------
   // TX BUILDERS
   // ------------------------------
@@ -50,14 +45,20 @@ export default function StorageStatusPage() {
       }),
     );
 
-    tx.moveCall({
-      target: `${ZING_STUDIO_PACKAGE_ADDRESS}::storage::fund_wal_treasury`,
-      arguments: [
-        tx.sharedObjectRef(ZING_STORAGE_TREASURY_SHARED_OBJECT_REF),
-        tx.sharedObjectRef(ZING_STUDIO_CONFIG_SHARED_OBJECT_REF),
-        wal,
-      ],
-    });
+    tx.add(
+      Storage.fundWalTreasury({
+        package: zingClient.config.zing.ZING_STUDIO_PACKAGE_ADDRESS,
+        arguments: {
+          self: tx.sharedObjectRef(
+            zingClient.config.zing.ZING_STORAGE_TREASURY_SHARED_OBJECT_REF,
+          ),
+          config: tx.sharedObjectRef(
+            zingClient.config.zing.ZING_STUDIO_CONFIG_SHARED_OBJECT_REF,
+          ),
+          coin: wal,
+        },
+      }),
+    );
 
     return tx;
   };
@@ -81,9 +82,11 @@ export default function StorageStatusPage() {
     );
 
     const storage = tx.moveCall({
-      target: `${WAL_PACKAGE_ADDRESS}::system::reserve_space_for_epochs`,
+      target: `${zingClient.config.walrus.WALRUS_PACKAGE}::system::reserve_space_for_epochs`,
       arguments: [
-        tx.sharedObjectRef(WALRUS_SYSTEM_SHARED_OBJECT_REF),
+        tx.sharedObjectRef(
+          zingClient.config.walrus.WALRUS_SYSTEM_SHARED_OBJECT_REF,
+        ),
         tx.pure.u64(storageAmount),
         tx.pure.u32(startEpoch),
         tx.pure.u32(endEpoch),
@@ -91,16 +94,23 @@ export default function StorageStatusPage() {
       ],
     });
 
-    tx.moveCall({
-      target: `${ZING_STUDIO_PACKAGE_ADDRESS}::storage::add_storage_to_treasury`,
-      arguments: [
-        tx.sharedObjectRef(ZING_STORAGE_TREASURY_SHARED_OBJECT_REF),
-        tx.sharedObjectRef(ZING_STUDIO_CONFIG_SHARED_OBJECT_REF),
-        tx.sharedObjectRef(WALRUS_SYSTEM_SHARED_OBJECT_REF),
-        storage,
-      ],
-    });
-
+    tx.add(
+      Storage.addStorageToTreasury({
+        package: zingClient.config.zing.ZING_STUDIO_PACKAGE_ADDRESS,
+        arguments: {
+          self: tx.sharedObjectRef(
+            zingClient.config.zing.ZING_STORAGE_TREASURY_SHARED_OBJECT_REF,
+          ),
+          config: tx.sharedObjectRef(
+            zingClient.config.zing.ZING_STUDIO_CONFIG_SHARED_OBJECT_REF,
+          ),
+          walrusSystem: tx.sharedObjectRef(
+            zingClient.config.walrus.WALRUS_SYSTEM_SHARED_OBJECT_REF,
+          ),
+          storage,
+        },
+      }),
+    );
     tx.transferObjects([wal], address);
 
     return tx;
