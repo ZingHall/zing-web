@@ -126,8 +126,8 @@ export async function decryptData(
   return new Uint8Array(plaintext);
 }
 
-export const formatStorageSize = (bytes: string) => {
-  const size = parseInt(bytes);
+export const formatStorageSize = (bytes: string | number) => {
+  const size = parseInt(bytes.toString());
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   if (size < 1024 * 1024 * 1024)

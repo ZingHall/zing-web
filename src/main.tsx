@@ -30,7 +30,8 @@ if (!rootElement) {
   throw new Error("Failed to find the root element");
 }
 
-const network = "testnet";
+const network =
+  (import.meta.env.VITE_NETWORK as "testnet" | "mainnet") || "mainnet";
 const suiClient = new SuiClient({ url: getFullnodeUrl(network) });
 const suiGrpcClient = new SuiGrpcClient({
   network,

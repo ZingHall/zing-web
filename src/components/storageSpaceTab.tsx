@@ -35,6 +35,33 @@ export default function StorageStatusPage() {
     refetchIntervalInBackground: true,
   });
   const currentEopch = walrusSystem?.committee.epoch;
+
+  const usedStorageByEpoch = new Map<number, string>(
+    storageTreasury?.total_used_storage_size_by_epoch.contents.map((e) => [
+      e.key,
+      e.value,
+    ]) ?? [],
+  );
+
+  const storages = storageTreasury?.storages_by_epoch.contents ?? [];
+
+  const activeStorages = storages.filter(
+    (s) => s.value.end_epoch > (currentEopch ?? 0),
+  );
+
+  const expiredStorages = storages.filter(
+    (s) => s.value.end_epoch <= (currentEopch ?? 0),
+  );
+
+  const totalActiveStorage = activeStorages.reduce(
+    (sum, s) => sum + Number(s.value.storage_size),
+    0,
+  );
+
+  const totalUsedStorage =
+    storageTreasury?.total_used_storage_size_by_epoch.contents
+      .filter((e) => e.key >= (currentEopch ?? 0))
+      .reduce((sum, e) => sum + Number(e.value), 0) ?? 0;
   // ------------------------------
   // TX BUILDERS
   // ------------------------------
@@ -176,6 +203,38 @@ export default function StorageStatusPage() {
     <div className="p-6 space-y-8">
       <h1 className="text-3xl font-semibold">Storage Space Status</h1>
 
+      <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow">
+        <h2 className="text-xl font-semibold mb-4">Storage Overview</h2>
+
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-zinc-500">Active Storage</p>
+            <p className="font-semibold">
+              {formatStorageSize(totalActiveStorage)}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500">Used Storage</p>
+            <p className="font-semibold">
+              {formatStorageSize(totalUsedStorage)}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500">Expired Windows</p>
+            <p className="font-semibold text-red-600">
+              {expiredStorages.length}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500">Active Windows</p>
+            <p className="font-semibold">{activeStorages.length}</p>
+          </div>
+        </div>
+      </div>
+
       {/* STORAGE BY EPOCH + BUTTON */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow">
         <div className="flex justify-between items-center mb-2">
@@ -206,19 +265,47 @@ export default function StorageStatusPage() {
 
         <div className="space-y-4">
           {storageTreasury?.storages_by_epoch.contents
-            .filter((epoch) => epoch.value.start_epoch >= (currentEopch || 0))
-            .sort((a, b) => a.value.start_epoch - b.value.start_epoch)
-            .map((epoch) => (
-              <div
-                key={epoch.key}
-                className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg"
-              >
-                <p>Epoch: {epoch.key}</p>
-                <p>
-                  Storage Size: {formatStorageSize(epoch.value.storage_size)}
-                </p>
-              </div>
-            ))}
+            .sort((a, b) => b.value.start_epoch - a.value.start_epoch)
+            .map((epoch) => {
+              const expired = epoch.value.end_epoch <= (currentEopch ?? 0);
+
+              const usedStorage = usedStorageByEpoch.get(epoch.key) ?? "0";
+
+              return (
+                <div
+                  key={epoch.key}
+                  className={`p-4 border rounded-lg ${
+                    expired
+                      ? "border-red-300 bg-red-50 dark:bg-red-900/20"
+                      : "border-zinc-200 dark:border-zinc-700"
+                  }`}
+                >
+                  <div className="flex justify-between">
+                    <p>Epoch: {epoch.key}</p>
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${
+                        expired
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {expired ? "EXPIRED" : "ACTIVE"}
+                    </span>
+                  </div>
+
+                  <p>
+                    Available Storage Size:{" "}
+                    {formatStorageSize(epoch.value.storage_size)}
+                  </p>
+
+                  <p>Used Storage Size: {formatStorageSize(usedStorage)}</p>
+
+                  <p className="text-xs text-zinc-500">
+                    {epoch.value.start_epoch} - {epoch.value.end_epoch}
+                  </p>
+                </div>
+              );
+            })}
         </div>
       </div>
 
@@ -241,6 +328,41 @@ export default function StorageStatusPage() {
             Balance:{" "}
             {Number(storageTreasury?.wal_treasury.balance.value) / 10 ** 9}
           </p>
+        </div>
+      </div>
+      {/* Tier plans */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow">
+        <h2 className="text-xl font-semibold mb-4">Storage Tier Plans</h2>
+
+        <div className="space-y-3">
+          {storageTreasury?.tier_plan.contents.map((tier) => (
+            <div
+              key={tier.key}
+              className="p-4 border rounded-lg border-zinc-200 dark:border-zinc-700"
+            >
+              <p className="font-medium">Tier {tier.key}</p>
+              <p>Price: {Number(tier.value.price) / 10 ** 9} WAL</p>
+              <p>Duration: {tier.value.duration_days} days</p>
+              <p>Limit: {formatStorageSize(tier.value.storage_limit)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Wal treasury */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow">
+        <h2 className="text-xl font-semibold mb-4">WAL Usage Budget</h2>
+
+        <div className="space-y-3">
+          {storageTreasury?.wal_treasury_usage_budget.contents.map((b) => (
+            <div
+              key={b.key}
+              className="p-4 border rounded-lg border-zinc-200 dark:border-zinc-700"
+            >
+              <p>Epoch Window: {b.key}</p>
+              <p>Duration: {Number(b.value.duration)} epochs</p>
+              <p>Max Budget: {Number(b.value.max_budget) / 10 ** 9} WAL</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

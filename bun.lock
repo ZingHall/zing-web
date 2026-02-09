@@ -14,7 +14,7 @@
         "@tanstack/react-query": "^5.90.16",
         "@types/node": "^20",
         "@zing-protocol/stego-wasm": "^0.0.2",
-        "@zing-protocol/zing-sdk": "^0.0.12",
+        "@zing-protocol/zing-sdk": "^0.0.13",
         "buffer": "^6.0.3",
         "lucide-react": "^0.555.0",
         "pngjs": "^7.0.0",
@@ -538,7 +538,7 @@
 
     "@zing-protocol/stego-wasm": ["@zing-protocol/stego-wasm@0.0.2", "", {}, "sha512-JfAlySJSRLGaLrUI1EegCO6aJSprjcdfSDMqd76IiW018izGMXb4hMEv2slOd3eA8A5M0Y8zHoWUIxr+EYZ9Cw=="],
 
-    "@zing-protocol/zing-sdk": ["@zing-protocol/zing-sdk@0.0.12", "", { "dependencies": { "@mysten/seal": "^0.9.3", "@mysten/sui": "^1.45.0", "@mysten/walrus": "^0.9.0", "@reclaimprotocol/js-sdk": "^4.5.1", "@tanstack/react-query": "5.90.5", "js-sha3": "^0.9.3", "zustand": "^5.0.8" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-10BJ4rxdC0d/7Mrg/4/k0y6M3GCMqHcl2PHI/UiUnqK7S3jE7K2iPMa7kglN6oIYgxOSk//TzpJtXz9mOPNmKA=="],
+    "@zing-protocol/zing-sdk": ["@zing-protocol/zing-sdk@0.0.13", "", { "dependencies": { "@mysten/seal": "^0.9.3", "@mysten/sui": "^1.45.0", "@mysten/walrus": "^0.9.0", "@reclaimprotocol/js-sdk": "^4.5.1", "@tanstack/react-query": "5.90.5", "js-sha3": "^0.9.3", "zustand": "^5.0.8" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-leVrsVMFE/WPso3CrJjDeRxUw+aG+Js3q/EjcJt+lVv4THTal3lZyX9P1S3O9FE7ErT7RT35nliqFUUjhTpuDg=="],
 
     "acorn": ["acorn@8.15.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg=="],
 

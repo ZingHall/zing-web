@@ -3,12 +3,14 @@ import Navbar from "@/components/Navbar";
 import "@mysten/dapp-kit/dist/index.css";
 import EmbedTab from "@/components/EmbedTab";
 import StorageSpaceTab from "@/components/storageSpaceTab";
+import StudioTab from "./components/StudioTab";
 
 const tabs = [
-  // { id: "how-it-works", label: "How it works", component: HowItWorksTab },
-  // { id: "studio", label: "Setup Studio", component: SetupStudioTab },
-  // { id: "purchase", label: "Purchase Plan", component: PurchaseTierTab },
-  // { id: "publish", label: "upload image", component: publishtab }, { id: "works", label: "works", component: workstab },
+  {
+    id: "studio",
+    label: "Studio",
+    component: StudioTab,
+  },
   {
     id: "storage-treasury",
     label: "Storage Treasury",
@@ -18,13 +20,7 @@ const tabs = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("storage-treasury");
-
-  const renderActiveComponent = () => {
-    const ActiveComponent =
-      tabs.find((tab) => tab.id === activeTab)?.component || StorageSpaceTab;
-    return <ActiveComponent />;
-  };
+  const [activeTab, setActiveTab] = useState("studio");
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
@@ -52,7 +48,19 @@ export default function App() {
         </div>
 
         {/* Tab Content */}
-        <div className="mb-8">{renderActiveComponent()}</div>
+        <div className="mb-8">
+          {tabs.map((tab) => {
+            const Component = tab.component;
+            return (
+              <div
+                key={tab.id}
+                style={{ display: activeTab === tab.id ? "block" : "none" }}
+              >
+                <Component />
+              </div>
+            );
+          })}
+        </div>
       </main>
     </div>
   );
