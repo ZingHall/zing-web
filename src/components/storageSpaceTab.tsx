@@ -25,10 +25,14 @@ export default function StorageStatusPage() {
 
   const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
-    queryFn: async () => suiJsonRpcClient.walrus.systemState(),
+    queryFn: async () => await suiJsonRpcClient.walrus.systemState(),
     enabled: !!suiJsonRpcClient,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    // Add this line:
+    refetchInterval: 5 * 60 * 1000,
+    // Optional: Keep fetching even if the window is in the background
+    refetchIntervalInBackground: true,
   });
   const currentEopch = walrusSystem?.committee.epoch;
   // ------------------------------
@@ -174,9 +178,8 @@ export default function StorageStatusPage() {
 
       {/* STORAGE BY EPOCH + BUTTON */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-semibold">Storages by Epoch</h2>
-
           <div className="space-x-4">
             {/* Action button */}
             {currentEopch && (
@@ -191,13 +194,15 @@ export default function StorageStatusPage() {
               className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               onClick={async () => {
                 await refetchWalrusSystem();
-                await refetchStorageTreasury();
+                // await refetchStorageTreasury();
               }}
             >
               Refresh
             </button>
           </div>
         </div>
+
+        <h3 className="mb-4">Current Epoch: {currentEopch}</h3>
 
         <div className="space-y-4">
           {storageTreasury?.storages_by_epoch.contents
