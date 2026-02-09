@@ -8,6 +8,7 @@ import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProvider } from "./context/appContext";
 import { Toaster } from "@/components/sonner";
+import { ReactNode } from "react";
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -19,7 +20,7 @@ const queryClient = new QueryClient();
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en">

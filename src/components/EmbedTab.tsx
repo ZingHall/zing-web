@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import init, {
   wasm_embed_message,
   wasm_extract_message,
@@ -66,6 +66,7 @@ export default function Home() {
 
       setExtractedMessage(message);
     } catch (error) {
+      console.error(error);
       setExtractError("No hidden message found or invalid image.");
     } finally {
       setExtractLoading(false);

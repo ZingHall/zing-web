@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import SetupStudioTab from "@/components/SetupStudioTab";
 import "@mysten/dapp-kit/dist/index.css";
 import EmbedTab from "@/components/EmbedTab";
 import StorageSpaceTab from "@/components/storageSpaceTab";
