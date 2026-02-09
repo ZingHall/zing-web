@@ -8,7 +8,12 @@ import { formatStorageSize, WAL_TESTNET_TYPE } from "@/lib/utils";
 import { useAppContext } from "@/app/context/appContext";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { useZingClient, useZingQuery, Storage } from "@zing-protocol/zing-sdk";
+import {
+  useZingClient,
+  useZingQuery,
+  Storage,
+  COIN_DECIMALS,
+} from "@zing-protocol/zing-sdk";
 
 export default function StorageStatusPage() {
   const { suiJsonRpcClient } = useAppContext();
@@ -25,23 +30,34 @@ export default function StorageStatusPage() {
 
   const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
-    queryFn: async () => await suiJsonRpcClient.walrus.systemState(),
+    queryFn: async () => {
+      const systemState = await suiJsonRpcClient.walrus.systemState();
+      return systemState;
+    },
     enabled: !!suiJsonRpcClient,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    // Add this line:
-    refetchInterval: 5 * 60 * 1000,
-    // Optional: Keep fetching even if the window is in the background
-    refetchIntervalInBackground: true,
   });
   const currentEopch = walrusSystem?.committee.epoch;
 
-  const usedStorageByEpoch = new Map<number, string>(
+  const usedStorageByEpoch = new Map<number, number>(
     storageTreasury?.total_used_storage_size_by_epoch.contents.map((e) => [
-      e.key,
-      e.value,
+      Number(e.key),
+      Number(e.value),
     ]) ?? [],
   );
+
+  const storageByEpoch = new Map<
+    number,
+    (typeof Storage.StorageTreasury.$inferType.storages_by_epoch.contents)[number]["value"]
+  >(
+    storageTreasury?.storages_by_epoch.contents.map((s) => [
+      Number(s.key),
+      s.value,
+    ]) ?? [],
+  );
+
+  const allEpochs = Array.from(
+    new Set([...usedStorageByEpoch.keys(), ...storageByEpoch.keys()]),
+  ).sort((a, b) => b - a);
 
   const storages = storageTreasury?.storages_by_epoch.contents ?? [];
 
@@ -253,7 +269,7 @@ export default function StorageStatusPage() {
               className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               onClick={async () => {
                 await refetchWalrusSystem();
-                // await refetchStorageTreasury();
+                await refetchStorageTreasury();
               }}
             >
               Refresh
@@ -264,48 +280,56 @@ export default function StorageStatusPage() {
         <h3 className="mb-4">Current Epoch: {currentEopch}</h3>
 
         <div className="space-y-4">
-          {storageTreasury?.storages_by_epoch.contents
-            .sort((a, b) => b.value.start_epoch - a.value.start_epoch)
-            .map((epoch) => {
-              const expired = epoch.value.end_epoch <= (currentEopch ?? 0);
+          {allEpochs.map((epochKey) => {
+            const storage = storageByEpoch.get(epochKey);
+            const usedStorage = usedStorageByEpoch.get(epochKey) ?? 0;
 
-              const usedStorage = usedStorageByEpoch.get(epoch.key) ?? "0";
+            const expired = storage
+              ? storage.end_epoch <= (currentEopch ?? 0)
+              : epochKey < (currentEopch ?? 0); // fallback heuristic
 
-              return (
-                <div
-                  key={epoch.key}
-                  className={`p-4 border rounded-lg ${
-                    expired
-                      ? "border-red-300 bg-red-50 dark:bg-red-900/20"
-                      : "border-zinc-200 dark:border-zinc-700"
-                  }`}
-                >
-                  <div className="flex justify-between">
-                    <p>Epoch: {epoch.key}</p>
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        expired
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {expired ? "EXPIRED" : "ACTIVE"}
-                    </span>
-                  </div>
-
-                  <p>
-                    Available Storage Size:{" "}
-                    {formatStorageSize(epoch.value.storage_size)}
-                  </p>
-
-                  <p>Used Storage Size: {formatStorageSize(usedStorage)}</p>
-
-                  <p className="text-xs text-zinc-500">
-                    {epoch.value.start_epoch} - {epoch.value.end_epoch}
-                  </p>
+            return (
+              <div
+                key={epochKey}
+                className={`p-4 border rounded-lg ${
+                  expired
+                    ? "border-red-300 bg-red-50 dark:bg-red-900/20"
+                    : "border-zinc-200 dark:border-zinc-700"
+                }`}
+              >
+                <div className="flex justify-between">
+                  <p>Epoch: {epochKey}</p>
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      expired
+                        ? "bg-red-100 text-red-700"
+                        : "bg-green-100 text-green-700"
+                    }`}
+                  >
+                    {expired ? "EXPIRED" : "ACTIVE"}
+                  </span>
                 </div>
-              );
-            })}
+
+                {storage ? (
+                  <>
+                    <p>
+                      Available Storage Size:{" "}
+                      {formatStorageSize(storage.storage_size)}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {storage.start_epoch} - {storage.end_epoch}
+                    </p>
+                  </>
+                ) : (
+                  <p className="italic text-zinc-400">
+                    No active storage window
+                  </p>
+                )}
+
+                <p>Used Storage Size: {formatStorageSize(usedStorage)}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -341,7 +365,10 @@ export default function StorageStatusPage() {
               className="p-4 border rounded-lg border-zinc-200 dark:border-zinc-700"
             >
               <p className="font-medium">Tier {tier.key}</p>
-              <p>Price: {Number(tier.value.price) / 10 ** 9} WAL</p>
+              <p>
+                Price: {Number(tier.value.price) / 10 ** COIN_DECIMALS.USDC}{" "}
+                USDC
+              </p>
               <p>Duration: {tier.value.duration_days} days</p>
               <p>Limit: {formatStorageSize(tier.value.storage_limit)}</p>
             </div>
@@ -358,8 +385,8 @@ export default function StorageStatusPage() {
               key={b.key}
               className="p-4 border rounded-lg border-zinc-200 dark:border-zinc-700"
             >
-              <p>Epoch Window: {b.key}</p>
-              <p>Duration: {Number(b.value.duration)} epochs</p>
+              <p>Tier {b.key}:</p>
+              <p>Time window: {Number(b.value.duration)} s</p>
               <p>Max Budget: {Number(b.value.max_budget) / 10 ** 9} WAL</p>
             </div>
           ))}
