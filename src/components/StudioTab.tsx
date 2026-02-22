@@ -91,7 +91,7 @@ export default function StudioTab() {
 
   console.log({ submittedAddress });
 
-  const allArticles = articles?.pages.flatMap((p: any) => p.data) ?? [];
+  const allArticles = articles?.pages.flatMap((p) => p.data) ?? [];
   const studioStatus = studio ? getStudioStatus(studio) : "unknown";
 
   const expiredArticleIds: string[] = [];
@@ -107,7 +107,7 @@ export default function StudioTab() {
         continue;
       }
 
-      if (articleStatus === "expired") {
+      if (article.deleted == true) {
         // Rule 2
         expiredArticleIds.push(article.id.id);
         continue;
