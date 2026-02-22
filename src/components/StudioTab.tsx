@@ -107,6 +107,12 @@ export default function StudioTab() {
         continue;
       }
 
+      if (articleStatus == "expired") {
+        // Rule 2
+        expiredArticleIds.push(article.id.id);
+        continue;
+      }
+
       if (article.deleted == true) {
         // Rule 2
         expiredArticleIds.push(article.id.id);
