@@ -6,11 +6,13 @@ import {
   useZingClient,
   StudioApp,
 } from "@zing-protocol/zing-sdk";
-import { useAppContext } from "@/app/context/appContext";
 import { formatStorageSize } from "@/lib/utils";
 import { toast } from "sonner";
 import { Transaction } from "@mysten/sui/transactions";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentClient, useDAppKit } from "@mysten/dapp-kit-react";
+import { ClientWithExtensions } from "@mysten/sui/client";
+import { WalrusClient } from "@mysten/walrus";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 
 function getArticleExpirationStatus(article: any, currentEpoch?: number) {
   if (!currentEpoch) return "unknown";
@@ -35,9 +37,11 @@ function getStudioStatus(studio: any) {
 
 export default function StudioTab() {
   const zingClient = useZingClient();
-  const { suiJsonRpcClient } = useAppContext();
-  const client = useSuiClient();
-  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const client = useCurrentClient() as ClientWithExtensions<
+    { walrus: WalrusClient },
+    SuiGrpcClient
+  >;
+  const dappKit = useDAppKit();
 
   const [address, setAddress] = useState("");
   const [submittedAddress, setSubmittedAddress] = useState<string | null>(null);
@@ -45,8 +49,8 @@ export default function StudioTab() {
   /** -------- Walrus epoch -------- */
   const { data: walrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
-    queryFn: async () => await suiJsonRpcClient.walrus.systemState(),
-    enabled: !!suiJsonRpcClient,
+    queryFn: async () => await client.walrus.systemState(),
+    enabled: !!client,
     refetchInterval: 5 * 60 * 1000,
     refetchIntervalInBackground: true,
   });
@@ -151,11 +155,16 @@ export default function StudioTab() {
         }),
       );
     }
-    const { digest } = await signAndExecute({
+    const result = await dappKit.signAndExecuteTransaction({
       transaction: tx,
     });
 
-    await client.waitForTransaction({ digest });
+    if (!result.Transaction?.digest)
+      throw new Error("Failed to get renewStudioArticles Transaction digest");
+
+    await client.core.waitForTransaction({
+      digest: result.Transaction?.digest,
+    });
     await refetchStudioWorks();
   };
 
@@ -183,11 +192,14 @@ export default function StudioTab() {
         }),
       );
     }
-    const { digest } = await signAndExecute({
+    const result = await dappKit.signAndExecuteTransaction({
       transaction: tx,
     });
 
-    await client.waitForTransaction({ digest });
+    if (!result.Transaction?.digest)
+      throw new Error("Failed to get burnStudioArticles Transaction digest");
+
+    await client.core.waitForTransaction({ digest: result.Transaction.digest });
     await refetchStudioWorks();
   };
 

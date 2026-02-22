@@ -1,11 +1,10 @@
 import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import {
-  useSuiClient,
-  useSignAndExecuteTransaction,
   useCurrentAccount,
-} from "@mysten/dapp-kit";
+  useCurrentClient,
+  useDAppKit,
+} from "@mysten/dapp-kit-react";
 import { formatStorageSize, WAL_TESTNET_TYPE } from "@/lib/utils";
-import { useAppContext } from "@/app/context/appContext";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,27 +13,32 @@ import {
   Storage,
   COIN_DECIMALS,
 } from "@zing-protocol/zing-sdk";
+import { WalrusClient } from "@mysten/walrus";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { ClientWithExtensions } from "@mysten/sui/client";
 
 export default function StorageStatusPage() {
-  const { suiJsonRpcClient } = useAppContext();
-  const client = useSuiClient();
+  const client = useCurrentClient() as ClientWithExtensions<
+    { walrus: WalrusClient },
+    SuiGrpcClient
+  >;
   const currentAccount = useCurrentAccount();
+  const dappKit = useDAppKit();
+
   const { data: storageTreasury, refetch: refetchStorageTreasury } =
     useZingQuery({
       method: "getStorageTreasury",
       params: [],
     });
-  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
-
   const zingClient = useZingClient();
 
   const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
     queryFn: async () => {
-      const systemState = await suiJsonRpcClient.walrus.systemState();
+      const systemState = await client.walrus.systemState();
       return systemState;
     },
-    enabled: !!suiJsonRpcClient,
+    enabled: !!client,
   });
   const currentEopch = walrusSystem?.committee.epoch;
 
@@ -174,12 +178,16 @@ export default function StorageStatusPage() {
 
       const tx = fundStorage(amount);
 
-      const { digest } = await signAndExecute({
+      const result = await dappKit.signAndExecuteTransaction({
         transaction: tx,
-        chain: "sui:testnet",
       });
 
-      await client.waitForTransaction({ digest });
+      if (!result.Transaction?.digest)
+        throw new Error("Failed to get handleFund Transaction digest");
+
+      await client.core.waitForTransaction({
+        digest: result.Transaction.digest,
+      });
       await refetchStorageTreasury();
 
       toast.success("Fund storage treasury success!");
@@ -197,12 +205,16 @@ export default function StorageStatusPage() {
 
       const tx = reserveSpace(currentAccount.address, amount, start, end);
 
-      const { digest } = await signAndExecute({
+      const result = await dappKit.signAndExecuteTransaction({
         transaction: tx,
-        chain: "sui:testnet",
       });
 
-      await client.waitForTransaction({ digest });
+      if (!result.Transaction?.digest)
+        throw new Error("Failed to get handleFund Transaction digest");
+
+      await client.core.waitForTransaction({
+        digest: result.Transaction.digest,
+      });
       await refetchStorageTreasury();
 
       toast.success("Reserved storage successfully!");

@@ -1,4 +1,4 @@
-import { ConnectButton } from "@mysten/dapp-kit";
+import { ConnectButton } from "@mysten/dapp-kit-react";
 
 export default function Navbar() {
   return (
