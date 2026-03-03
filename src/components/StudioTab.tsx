@@ -5,6 +5,9 @@ import {
   useZingInfiniteQuery,
   useZingClient,
   StudioApp,
+  Article,
+  Studio,
+  bytesToCredits,
 } from "@zing-protocol/zing-sdk";
 import { formatStorageSize } from "@/lib/utils";
 import { toast } from "sonner";
@@ -14,22 +17,25 @@ import { ClientWithExtensions } from "@mysten/sui/client";
 import { WalrusClient } from "@mysten/walrus";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
 
-function getArticleExpirationStatus(article: any, currentEpoch?: number) {
+function getArticleExpirationStatus(
+  article: typeof Article.Article.$inferType,
+  currentEpoch?: number,
+) {
   if (!currentEpoch) return "unknown";
 
   const blobs = article?.blobs ?? [];
   if (blobs.length === 0) return "expired";
 
   const minEndEpoch = Math.min(
-    ...blobs.map((b: any) => Number(b.storage?.end_epoch ?? 0)),
+    ...blobs.map((b) => Number(b.storage?.end_epoch ?? 0)),
   );
-
+  if (article.deleted) return "deleted";
   if (minEndEpoch <= currentEpoch) return "expired";
   if (minEndEpoch < currentEpoch + 2) return "requires_renew";
   return "active";
 }
 
-function getStudioStatus(studio: any) {
+function getStudioStatus(studio: typeof Studio.Studio.$inferType) {
   const now = Date.now();
   const end = Number(studio.period?.[1] ?? 0);
   return end <= now ? "expired" : "active";
@@ -107,25 +113,25 @@ export default function StudioTab() {
 
       if (studioStatus === "expired") {
         // Rule 1: studio expired ? burn everything
-        expiredArticleIds.push(article.id.id);
+        expiredArticleIds.push(article.id);
         continue;
       }
 
       if (articleStatus == "expired") {
         // Rule 2
-        expiredArticleIds.push(article.id.id);
+        expiredArticleIds.push(article.id);
         continue;
       }
 
       if (article.deleted == true) {
         // Rule 2
-        expiredArticleIds.push(article.id.id);
+        expiredArticleIds.push(article.id);
         continue;
       }
 
       if (articleStatus === "requires_renew") {
         // Rule 3
-        renewArticleIds.push(article.id.id);
+        renewArticleIds.push(article.id);
       }
     }
   }
@@ -314,13 +320,13 @@ export default function StudioTab() {
           <div>No articles found</div>
         )}
 
-        {allArticles.map((article: any) => {
+        {allArticles.map((article) => {
           const status = getArticleExpirationStatus(article, currentEpoch);
 
           return (
-            <div key={article.id.id} className="border rounded p-4 space-y-2">
+            <div key={article.id} className="border rounded p-4 space-y-2">
               <div className="flex justify-between">
-                <div className="font-mono text-sm">{article.id.id}</div>
+                <div className="font-mono text-sm">{article.id}</div>
                 <span
                   className={`text-sm px-2 py-1 rounded ${
                     status === "active"
@@ -340,14 +346,19 @@ export default function StudioTab() {
                 Created: {new Date(Number(article.created_at)).toLocaleString()}
               </div>
 
-              {article.blobs.map((blob: any, idx: number) => (
-                <div key={idx} className="text-sm text-gray-600">
-                  Blob {idx} - End Epoch: {blob.storage.end_epoch} - Size:{" "}
-                  {formatStorageSize(
-                    Number(blob.storage.storage_size).toString(),
-                  )}
-                </div>
-              ))}
+              {article.blobs.map((blob, idx) => {
+                const storageSize = Number(blob.storage.storage_size);
+                const credits = bytesToCredits(storageSize);
+                return (
+                  <div key={idx} className="text-sm text-gray-600">
+                    Blob {idx} - End Epoch: {blob.storage.end_epoch} - Size:{" "}
+                    {formatStorageSize(storageSize)}
+                    <span className="ml-2 text-purple-600 dark:text-purple-400">
+                      ({credits.toLocaleString()} credits)
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           );
         })}

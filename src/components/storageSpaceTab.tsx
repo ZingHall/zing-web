@@ -4,7 +4,7 @@ import {
   useCurrentClient,
   useDAppKit,
 } from "@mysten/dapp-kit-react";
-import { formatStorageSize, WAL_TESTNET_TYPE } from "@/lib/utils";
+import { formatStorageSize } from "@/lib/utils";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,6 +12,8 @@ import {
   useZingQuery,
   Storage,
   COIN_DECIMALS,
+  bytesToCredits,
+  WALRUS_BLOB_BASE_UNIT_BYTES,
 } from "@zing-protocol/zing-sdk";
 import { WalrusClient } from "@mysten/walrus";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
@@ -25,6 +27,18 @@ export default function StorageStatusPage() {
   const currentAccount = useCurrentAccount();
   const dappKit = useDAppKit();
 
+  const formatStorageWithCredits = (bytes: number) => {
+    const credits = bytesToCredits(bytes);
+    return (
+      <>
+        {formatStorageSize(bytes)}
+        <span className="ml-2 text-purple-600 dark:text-purple-400">
+          ({credits.toLocaleString()} credits)
+        </span>
+      </>
+    );
+  };
+
   const { data: storageTreasury, refetch: refetchStorageTreasury } =
     useZingQuery({
       method: "getStorageTreasury",
@@ -32,15 +46,35 @@ export default function StorageStatusPage() {
     });
   const zingClient = useZingClient();
 
-  const { data: walrusSystem, refetch: refetchWalrusSystem } = useQuery({
+  const { data: walrusStakingState, refetch: refetchWalrusStakingState } =
+    useQuery({
+      queryKey: ["walrusStaking"],
+      queryFn: async () => {
+        const stakingState = await client.walrus.stakingState();
+        return stakingState;
+      },
+      enabled: !!client,
+    });
+  const { data: walrusSystemState, refetch: refetchWalrusSystem } = useQuery({
     queryKey: ["walrusSystem"],
     queryFn: async () => {
-      const systemState = await client.walrus.systemState();
-      return systemState;
+      return await client.walrus.systemState();
     },
     enabled: !!client,
   });
-  const currentEopch = walrusSystem?.committee.epoch;
+
+  console.log({ walrusStakingState, walrusSystemState });
+  const nextEpochStartTime =
+    walrusStakingState?.epoch_state.$kind === "EpochChangeDone"
+      ? walrusStakingState.epoch_state.EpochChangeDone
+      : null;
+  const epochDuration = walrusStakingState?.epoch_duration;
+  const currentEopch = walrusStakingState?.epoch;
+
+  const epochFinishedTime =
+    nextEpochStartTime && epochDuration
+      ? Number(nextEpochStartTime) + Number(epochDuration)
+      : null;
 
   const usedStorageByEpoch = new Map<number, number>(
     storageTreasury?.total_used_storage_size_by_epoch.contents.map((e) => [
@@ -92,7 +126,7 @@ export default function StorageStatusPage() {
       coinWithBalance({
         balance,
         useGasCoin: false,
-        type: WAL_TESTNET_TYPE,
+        type: zingClient.config.coins.WAL,
       }),
     );
 
@@ -128,7 +162,7 @@ export default function StorageStatusPage() {
       coinWithBalance({
         balance: 10 ** 9,
         useGasCoin: false,
-        type: WAL_TESTNET_TYPE,
+        type: zingClient.config.coins.WAL,
       }),
     );
 
@@ -138,7 +172,7 @@ export default function StorageStatusPage() {
         tx.sharedObjectRef(
           zingClient.config.walrus.WALRUS_SYSTEM_SHARED_OBJECT_REF,
         ),
-        tx.pure.u64(storageAmount),
+        tx.pure.u64(Math.floor(storageAmount)),
         tx.pure.u32(startEpoch),
         tx.pure.u32(endEpoch),
         wal,
@@ -189,6 +223,7 @@ export default function StorageStatusPage() {
         digest: result.Transaction.digest,
       });
       await refetchStorageTreasury();
+      await refetchWalrusStakingState();
 
       toast.success("Fund storage treasury success!");
     } catch (error: any) {
@@ -199,11 +234,15 @@ export default function StorageStatusPage() {
   const handleReserve = async () => {
     try {
       if (!currentEopch || !currentAccount) return;
-      const amount = 66034000;
       const start = Number(currentEopch);
       const end = Number(currentEopch + 2);
 
-      const tx = reserveSpace(currentAccount.address, amount, start, end);
+      const tx = reserveSpace(
+        currentAccount.address,
+        WALRUS_BLOB_BASE_UNIT_BYTES * 10,
+        start,
+        end,
+      );
 
       const result = await dappKit.signAndExecuteTransaction({
         transaction: tx,
@@ -238,14 +277,14 @@ export default function StorageStatusPage() {
           <div>
             <p className="text-zinc-500">Active Storage</p>
             <p className="font-semibold">
-              {formatStorageSize(totalActiveStorage)}
+              {formatStorageWithCredits(totalActiveStorage)}
             </p>
           </div>
 
           <div>
             <p className="text-zinc-500">Used Storage</p>
             <p className="font-semibold">
-              {formatStorageSize(totalUsedStorage)}
+              {formatStorageWithCredits(totalUsedStorage)}
             </p>
           </div>
 
@@ -290,7 +329,14 @@ export default function StorageStatusPage() {
           </div>
         </div>
 
-        <h3 className="mb-4">Current Epoch: {currentEopch}</h3>
+        <h3 className="mb-4">
+          Current Epoch: {currentEopch}
+          {epochFinishedTime && (
+            <span className="ml-4 text-zinc-500">
+              Epoch finishes at: {new Date(epochFinishedTime).toLocaleString()}
+            </span>
+          )}
+        </h3>
 
         <div className="space-y-4">
           {allEpochs.map((epochKey) => {
@@ -327,7 +373,7 @@ export default function StorageStatusPage() {
                   <>
                     <p>
                       Available Storage Size:{" "}
-                      {formatStorageSize(storage.storage_size)}
+                      {formatStorageWithCredits(Number(storage.storage_size))}
                     </p>
                     <p className="text-xs text-zinc-500">
                       {storage.start_epoch} - {storage.end_epoch}
@@ -339,7 +385,9 @@ export default function StorageStatusPage() {
                   </p>
                 )}
 
-                <p>Used Storage Size: {formatStorageSize(usedStorage)}</p>
+                <p>
+                  Used Storage Size: {formatStorageWithCredits(usedStorage)}
+                </p>
               </div>
             );
           })}
@@ -360,7 +408,7 @@ export default function StorageStatusPage() {
         </div>
 
         <div className="p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg">
-          <p>ID: {storageTreasury?.wal_treasury.id.id}</p>
+          <p>ID: {storageTreasury?.wal_treasury.id}</p>
           <p>
             Balance:{" "}
             {Number(storageTreasury?.wal_treasury.balance.value) / 10 ** 9}
@@ -383,7 +431,10 @@ export default function StorageStatusPage() {
                 USDC
               </p>
               <p>Duration: {tier.value.duration_days} days</p>
-              <p>Limit: {formatStorageSize(tier.value.storage_limit)}</p>
+              <p>
+                Limit:{" "}
+                {formatStorageWithCredits(Number(tier.value.storage_limit))}
+              </p>
             </div>
           ))}
         </div>
