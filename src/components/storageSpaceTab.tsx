@@ -7,13 +7,14 @@ import {
 import { formatStorageSize } from "@/lib/utils";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   useZingClient,
   useZingQuery,
   Storage,
   COIN_DECIMALS,
   bytesToCredits,
-  WALRUS_BLOB_BASE_UNIT_BYTES,
+  creditsToBytes,
 } from "@zing-protocol/zing-sdk";
 import { WalrusClient } from "@mysten/walrus";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
@@ -26,6 +27,13 @@ export default function StorageStatusPage() {
   >;
   const currentAccount = useCurrentAccount();
   const dappKit = useDAppKit();
+
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
+  const [topupStartEpoch, setTopupStartEpoch] = useState<string>("");
+  const [topupEndEpoch, setTopupEndEpoch] = useState<string>("");
+  const [topupCredits, setTopupCredits] = useState<string>("");
+
+  const topupBytes = creditsToBytes(Number(topupCredits) || 0);
 
   const formatStorageWithCredits = (bytes: number) => {
     const credits = bytesToCredits(bytes);
@@ -70,6 +78,27 @@ export default function StorageStatusPage() {
       : null;
   const epochDuration = walrusStakingState?.epoch_duration;
   const currentEopch = walrusStakingState?.epoch;
+
+  const getTopupValidationError = () => {
+    const start = Number(topupStartEpoch);
+    const end = Number(topupEndEpoch);
+    const credits = Number(topupCredits);
+
+    if (!currentEopch) return "Current epoch not loaded";
+
+    if (isNaN(start) || start < Number(currentEopch)) {
+      return `Start epoch must be >= current epoch (${currentEopch})`;
+    }
+    if (isNaN(end) || end <= start) {
+      return "End epoch must be greater than start epoch";
+    }
+    if (isNaN(credits) || credits <= 0) {
+      return "Credits must be greater than 0";
+    }
+    return null;
+  };
+
+  const topupValidationError = getTopupValidationError();
 
   const epochFinishedTime =
     nextEpochStartTime && epochDuration
@@ -234,12 +263,16 @@ export default function StorageStatusPage() {
   const handleReserve = async () => {
     try {
       if (!currentEopch || !currentAccount) return;
-      const start = Number(currentEopch);
-      const end = Number(currentEopch + 2);
+
+      const start = Number(topupStartEpoch);
+      const end = Number(topupEndEpoch);
+      const storageAmount = topupBytes;
+
+      if (storageAmount <= 0) return;
 
       const tx = reserveSpace(
         currentAccount.address,
-        WALRUS_BLOB_BASE_UNIT_BYTES * 10,
+        storageAmount,
         start,
         end,
       );
@@ -255,6 +288,11 @@ export default function StorageStatusPage() {
         digest: result.Transaction.digest,
       });
       await refetchStorageTreasury();
+
+      setIsTopupModalOpen(false);
+      setTopupStartEpoch("");
+      setTopupEndEpoch("");
+      setTopupCredits("");
 
       toast.success("Reserved storage successfully!");
     } catch (error: any) {
@@ -310,13 +348,19 @@ export default function StorageStatusPage() {
             {/* Action button */}
             {currentEopch && (
               <button
+                type="button"
                 className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleReserve}
+                onClick={() => {
+                  setTopupStartEpoch(String(currentEopch));
+                  setTopupEndEpoch(String(Number(currentEopch) + 2));
+                  setIsTopupModalOpen(true);
+                }}
               >
-                Topup Storage at Epoch {currentEopch} to {currentEopch + 2}
+                Topup Storage
               </button>
             )}
             <button
+              type="button"
               className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               onClick={async () => {
                 client.walrus.reset();
@@ -400,6 +444,7 @@ export default function StorageStatusPage() {
           <h2 className="text-xl font-semibold">WAL Treasury</h2>
 
           <button
+            type="button"
             className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
             onClick={handleFund}
           >
@@ -456,6 +501,95 @@ export default function StorageStatusPage() {
           ))}
         </div>
       </div>
+
+      {/* TOPUP STORAGE MODAL */}
+      {isTopupModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">Topup Storage</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="topupStartEpoch" className="block text-sm font-medium mb-1">
+                  Start Epoch
+                </label>
+                <input
+                  id="topupStartEpoch"
+                  type="number"
+                  value={topupStartEpoch}
+                  onChange={(e) => setTopupStartEpoch(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-zinc-800 dark:border-zinc-700"
+                  placeholder={currentEopch ? String(currentEopch) : "Enter start epoch"}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="topupEndEpoch" className="block text-sm font-medium mb-1">
+                  End Epoch
+                </label>
+                <input
+                  id="topupEndEpoch"
+                  type="number"
+                  value={topupEndEpoch}
+                  onChange={(e) => setTopupEndEpoch(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-zinc-800 dark:border-zinc-700"
+                  placeholder={currentEopch ? String(Number(currentEopch) + 2) : "Enter end epoch"}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="topupCredits" className="block text-sm font-medium mb-1">
+                  Credits
+                </label>
+                <input
+                  id="topupCredits"
+                  type="number"
+                  value={topupCredits}
+                  onChange={(e) => setTopupCredits(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-zinc-800 dark:border-zinc-700"
+                  placeholder="Enter credits"
+                />
+              </div>
+
+              {topupCredits && Number(topupCredits) > 0 && (
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    {Number(topupCredits).toLocaleString()} credits ={" "}
+                    {formatStorageSize(topupBytes)} bytes
+                  </p>
+                </div>
+              )}
+
+              {topupValidationError && (
+                <p className="text-sm text-red-600">{topupValidationError}</p>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg border hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  onClick={() => {
+                    setIsTopupModalOpen(false);
+                    setTopupStartEpoch("");
+                    setTopupEndEpoch("");
+                    setTopupCredits("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleReserve}
+                  disabled={!!topupValidationError}
+                >
+                  Reserve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
