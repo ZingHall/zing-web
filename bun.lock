@@ -14,7 +14,7 @@
         "@tanstack/react-query": "^5.90.16",
         "@types/node": "^20",
         "@zing-protocol/stego-wasm": "^0.0.2",
-        "@zing-protocol/zing-sdk": "^0.1.4",
+        "@zing-protocol/zing-sdk": "^0.1.12",
         "buffer": "^6.0.3",
         "lucide-react": "^0.555.0",
         "pngjs": "^7.0.0",
@@ -434,7 +434,7 @@
 
     "@zing-protocol/stego-wasm": ["@zing-protocol/stego-wasm@0.0.2", "", {}, "sha512-JfAlySJSRLGaLrUI1EegCO6aJSprjcdfSDMqd76IiW018izGMXb4hMEv2slOd3eA8A5M0Y8zHoWUIxr+EYZ9Cw=="],
 
-    "@zing-protocol/zing-sdk": ["@zing-protocol/zing-sdk@0.1.4", "", { "dependencies": { "@mysten/seal": "^1.0.1", "@mysten/sui": "^2.4.0", "@mysten/walrus": "^1.0.3", "@reclaimprotocol/js-sdk": "^4.5.1", "@tanstack/react-query": "5.90.5", "js-sha3": "^0.9.3", "zustand": "^5.0.8" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-1J5H853erZlq1qmVqsVV3aJsYR9SWCDYNSWBbwLSWHnDZ4hWEnXhlbVI051wuYz6mfW28ixza0fKNctSOWR7Yg=="],
+    "@zing-protocol/zing-sdk": ["@zing-protocol/zing-sdk@0.1.12", "", { "dependencies": { "@mysten/seal": "^1.1.1", "@mysten/sui": "^2.13.0", "@mysten/walrus": "^1.0.3", "@reclaimprotocol/js-sdk": "^4.5.1", "js-sha3": "^0.9.3", "zustand": "^5.0.8" }, "peerDependencies": { "@tanstack/react-query": "catalog:", "react": ">=18.0.0", "react-dom": ">=18.0.0" }, "optionalPeers": ["@tanstack/react-query", "react", "react-dom"] }, "sha512-CnzNSHqOuvQzECl6UHYbgxAcfQ0qLBgMre6EtpaI4BGZHhwjIdIgaUvDCn9YlTHjepqfF+ph4KfCccCwIGzs5A=="],
 
     "acorn": ["acorn@8.16.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw=="],
 
@@ -1036,7 +1036,9 @@
 
     "@wallet-standard/errors/chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
 
-    "@zing-protocol/zing-sdk/@mysten/seal": ["@mysten/seal@1.1.0", "", { "dependencies": { "@mysten/bcs": "^2.0.2", "@noble/curves": "^2.0.1", "@noble/hashes": "^2.0.1" }, "peerDependencies": { "@mysten/sui": "^2.5.0" } }, "sha512-EXNBRCApmfhI2KPnYIUI8AxYzg/RAv49yzZZ1BX0CzAIKeXUfqd1Bj1sK7/VNem2/gPaYJYRFsUfVvEZXIp1lw=="],
+    "@zing-protocol/zing-sdk/@mysten/seal": ["@mysten/seal@1.1.1", "", { "dependencies": { "@mysten/bcs": "^2.0.3", "@noble/curves": "^2.0.1", "@noble/hashes": "^2.0.1" }, "peerDependencies": { "@mysten/sui": "^2.8.0" } }, "sha512-OGxEDmEuXQAzxJKz3ap1dkRSf5fD/iKpz/J8+wZlPbeSok2fVt3KPaCZngjrvqqVRn5lmQomNpzXQCKo929A3w=="],
+
+    "@zing-protocol/zing-sdk/@mysten/sui": ["@mysten/sui@2.16.0", "", { "dependencies": { "@graphql-typed-document-node/core": "^3.2.0", "@mysten/bcs": "^2.0.3", "@mysten/utils": "^0.3.1", "@noble/curves": "^2.0.1", "@noble/hashes": "^2.0.1", "@protobuf-ts/grpcweb-transport": "^2.11.1", "@protobuf-ts/runtime": "^2.11.1", "@protobuf-ts/runtime-rpc": "^2.11.1", "@scure/base": "^2.0.0", "@scure/bip32": "^2.0.1", "@scure/bip39": "^2.0.1", "gql.tada": "^1.9.0", "graphql": "^16.12.0", "poseidon-lite": "0.2.1", "valibot": "^1.2.0" } }, "sha512-xnf3e3uIuJGzIVEBLEl372Xk51CB45CP2ZlXXLSnWHH1MI0xIpko10JSQ44ohde9XhxygAy1jz26rkrlCgDGXQ=="],
 
     "eslint/ignore": ["ignore@5.3.2", "", {}, "sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g=="],
 
@@ -1056,11 +1058,17 @@
 
     "@typescript-eslint/typescript-estree/minimatch/brace-expansion": ["brace-expansion@5.0.4", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-h+DEnpVvxmfVefa4jFbCf5HdH5YMDXRsmKflpf1pILZWRFlTbJpxeU55nJl4Smt5HQaGzg1o6RHFPJaOqnmBDg=="],
 
-    "@zing-protocol/zing-sdk/@mysten/seal/@mysten/bcs": ["@mysten/bcs@2.0.2", "", { "dependencies": { "@mysten/utils": "^0.3.1", "@scure/base": "^2.0.0" } }, "sha512-c/nVRPJEV1fRZdKXhysVsy/yCPdiFt7jn6A4/7W2LH1ZPSVPzRkxtLY362D0zaLuBnyT5Y9d9nFLm3ixI8Goug=="],
+    "@zing-protocol/zing-sdk/@mysten/seal/@mysten/bcs": ["@mysten/bcs@2.0.3", "", { "dependencies": { "@mysten/utils": "^0.3.1", "@scure/base": "^2.0.0" } }, "sha512-dwcaL4HNAsEGpU3hKUAsXgCZp9l6++e2A3THpzoYZ8e7bsy4XH1V0dXD5dIzgNcVZiZfb6ZnDMG+gdF6+1WOQA=="],
 
     "@zing-protocol/zing-sdk/@mysten/seal/@noble/curves": ["@noble/curves@2.0.1", "", { "dependencies": { "@noble/hashes": "2.0.1" } }, "sha512-vs1Az2OOTBiP4q0pwjW5aF0xp9n4MxVrmkFBxc6EKZc6ddYx5gaZiAsZoq0uRRXWbi3AT/sBqn05eRPtn1JCPw=="],
 
     "@zing-protocol/zing-sdk/@mysten/seal/@noble/hashes": ["@noble/hashes@2.0.1", "", {}, "sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw=="],
+
+    "@zing-protocol/zing-sdk/@mysten/sui/@mysten/bcs": ["@mysten/bcs@2.0.3", "", { "dependencies": { "@mysten/utils": "^0.3.1", "@scure/base": "^2.0.0" } }, "sha512-dwcaL4HNAsEGpU3hKUAsXgCZp9l6++e2A3THpzoYZ8e7bsy4XH1V0dXD5dIzgNcVZiZfb6ZnDMG+gdF6+1WOQA=="],
+
+    "@zing-protocol/zing-sdk/@mysten/sui/@noble/curves": ["@noble/curves@2.0.1", "", { "dependencies": { "@noble/hashes": "2.0.1" } }, "sha512-vs1Az2OOTBiP4q0pwjW5aF0xp9n4MxVrmkFBxc6EKZc6ddYx5gaZiAsZoq0uRRXWbi3AT/sBqn05eRPtn1JCPw=="],
+
+    "@zing-protocol/zing-sdk/@mysten/sui/@noble/hashes": ["@noble/hashes@2.0.1", "", {}, "sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw=="],
 
     "ethers/@types/node/undici-types": ["undici-types@6.19.8", "", {}, "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="],
 
