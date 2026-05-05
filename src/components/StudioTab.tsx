@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  useZingQuery,
-  useZingInfiniteQuery,
-  useZingClient,
   StudioApp,
   Article,
   Studio,
   bytesToCredits,
 } from "@zing-protocol/zing-sdk";
+
+import {
+  useZingQuery,
+  useZingInfiniteQuery,
+  useZingClient,
+} from "@zing-protocol/zing-sdk/react";
 import { formatStorageSize } from "@/lib/utils";
 import { toast } from "sonner";
 import { Transaction } from "@mysten/sui/transactions";

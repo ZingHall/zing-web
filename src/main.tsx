@@ -7,7 +7,7 @@ import { Toaster } from "@/components/sonner";
 import App from "./App"; // Make sure this path points to your actual App component
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./components/providers/theme-provider";
-import { ZingClientProvider } from "@zing-protocol/zing-sdk";
+import { ZingClientProvider } from "@zing-protocol/zing-sdk/react";
 import { SuiGraphQLClient } from "@mysten/sui/graphql";
 import { walrus } from "@mysten/walrus";
 import { createDAppKit, DAppKitProvider } from "@mysten/dapp-kit-react";

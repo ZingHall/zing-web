@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-  useZingClient,
-  useZingQuery,
   Storage,
   COIN_DECIMALS,
   bytesToCredits,
@@ -19,6 +17,7 @@ import {
 import { WalrusClient } from "@mysten/walrus";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { ClientWithExtensions } from "@mysten/sui/client";
+import { useZingClient, useZingQuery } from "@zing-protocol/zing-sdk/react";
 
 export default function StorageStatusPage() {
   const client = useCurrentClient() as ClientWithExtensions<
@@ -510,7 +509,10 @@ export default function StorageStatusPage() {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="topupStartEpoch" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="topupStartEpoch"
+                  className="block text-sm font-medium mb-1"
+                >
                   Start Epoch
                 </label>
                 <input
@@ -519,12 +521,17 @@ export default function StorageStatusPage() {
                   value={topupStartEpoch}
                   onChange={(e) => setTopupStartEpoch(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-zinc-800 dark:border-zinc-700"
-                  placeholder={currentEopch ? String(currentEopch) : "Enter start epoch"}
+                  placeholder={
+                    currentEopch ? String(currentEopch) : "Enter start epoch"
+                  }
                 />
               </div>
 
               <div>
-                <label htmlFor="topupEndEpoch" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="topupEndEpoch"
+                  className="block text-sm font-medium mb-1"
+                >
                   End Epoch
                 </label>
                 <input
@@ -533,12 +540,19 @@ export default function StorageStatusPage() {
                   value={topupEndEpoch}
                   onChange={(e) => setTopupEndEpoch(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-zinc-800 dark:border-zinc-700"
-                  placeholder={currentEopch ? String(Number(currentEopch) + 2) : "Enter end epoch"}
+                  placeholder={
+                    currentEopch
+                      ? String(Number(currentEopch) + 2)
+                      : "Enter end epoch"
+                  }
                 />
               </div>
 
               <div>
-                <label htmlFor="topupCredits" className="block text-sm font-medium mb-1">
+                <label
+                  htmlFor="topupCredits"
+                  className="block text-sm font-medium mb-1"
+                >
                   Credits
                 </label>
                 <input
